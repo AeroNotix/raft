@@ -12,5 +12,6 @@
 
 #+sbcl
 (progn
-  (sb-cover:report "coverage/" )
-  (declaim (optimize (sb-cover:store-coverage-data 0))))
+  (handler-bind ((warning #'muffle-warning))
+    (sb-cover:report "coverage/" :external-format :utf-8)
+    (declaim (optimize (sb-cover:store-coverage-data 0)))))
