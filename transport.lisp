@@ -1,4 +1,11 @@
-(in-package :raft)
+(defpackage :raft/transport
+  (:use :cl)
+  (:export
+   #:append-entries
+   #:append-entries-response
+   #:request-vote
+   #:request-vote-response))
+(in-package :raft/transport)
 
 
 (defgeneric append-entries (transport server-id server-address append-entry))
