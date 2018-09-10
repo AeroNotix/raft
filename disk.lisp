@@ -122,10 +122,6 @@
                                    :op operation)))
     (end-of-file () nil)))
 
-(defun spy (term)
-  (format t "~A~%" term)
-  term)
-
 (defmethod apply-disk-log-entries ((pht persistent-hash-table) (stream stream))
   (file-position stream 0)
   (loop for log-entry in (sort (loop
