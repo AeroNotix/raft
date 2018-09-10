@@ -10,6 +10,7 @@
                :place-utils
                :usocket
                :usocket-server
+               :chanl
 
                :raft/conditions
                :raft/peer
