@@ -34,13 +34,15 @@
                 (eq :del f))
             (f)
             "The operation must be one of :SET or :DEL, ~S provided" f)
-    (assert (and (eq :set f)
-                 (not (null operand))
-                 (not (null value)))
-            (f operand value)
-            "Set operations require non-NIL operands and non-NIL values")
+    ;; to do allow any key/value type
     (check-type operand string "string")
-    (check-type value string "string")))
+    (when (eq :set f)
+      (assert
+       (and (not (null operand))
+            (not (null value)))
+       (f operand value)
+       "Set operations require non-NIL operands and non-NIL values")
+      (check-type value string "string"))))
 
 (defmethod serialize ((operation operation) (stream stream))
   ;; handle key/values len > #xFF
@@ -95,7 +97,8 @@
 (defmethod deserialize-operation ((stream stream))
   (let* ((op (if (eq (read-byte stream) 0) :set :del))
          (operand (read-sized-string-from-stream stream))
-         (value (read-sized-string-from-stream stream)))
+         (value (when (eq op :set)
+                  (read-sized-string-from-stream stream))))
     (make-instance 'operation
                    :f op
                    :operand operand
