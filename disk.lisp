@@ -9,7 +9,7 @@
 (in-package :raft/disk)
 
 
-(defconstant +log-entry-header+ #(#xCD #xCD #xCD #xCD)
+(defparameter +log-entry-header+ #(#xCD #xCD #xCD #xCD)
   "A marker for a log entry header, helpful to orientate outselves in
   a stream of log entries")
 
