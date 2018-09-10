@@ -22,7 +22,7 @@
 (defmethod (setf raft/fsm:state) (state (imt memory-transport))
   (setf (current-state (raft-state imt)) state))
 
-(define-state-handler memory-transport :follower (imt state (ae raft/msgs::append-entries))
+(define-state-handler memory-transport :follower (imt state (ae raft/msgs:append-entries))
   ;;   Receiver implementation:
   ;; 1. Reply false if term < currentTerm (§5.1)
   ;; 2. Reply false if log doesn’t contain an entry at prevLogIndex
@@ -35,12 +35,12 @@
   ;; min(leaderCommit, index of last new entry)
   state)
 
-(define-state-handler memory-transport :leader (imt state (ae raft/msgs::append-entries))
+(define-state-handler memory-transport :leader (imt state (ae raft/msgs:append-entries))
   ;; check if term > our term
   ;; apply to memory- log, replicate to followers
   state)
 
-(define-state-handler memory-transport :candidate (imt state (ae raft/msgs::append-entries))
+(define-state-handler memory-transport :candidate (imt state (ae raft/msgs:append-entries))
   state)
 
 (define-state-handler memory-transport :follower (imt state (ae raft/msgs:append-entries))
