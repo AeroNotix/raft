@@ -20,7 +20,14 @@
                                        (make-instance 'operation :f :set :operand "Z" :value "3")))))
       (loop for log-entry in log-entries
          do
-           (apply-pending-log-entry pht log-entry))))
+           (apply-pending-log-entry pht log-entry))
+      (ok (equal (retrieve-log-entry pht "X") "1"))
+      (ok (equal (retrieve-log-entry pht "Y") "2"))
+      (ok (equal (retrieve-log-entry pht "Z") "3")))
+    (let ((pht (make-instance 'persistent-hash-table :path "new.lht")))
+      (ok (equal (retrieve-log-entry pht "X") "1"))
+      (ok (equal (retrieve-log-entry pht "Y") "2"))
+      (ok (equal (retrieve-log-entry pht "Z") "3"))))
 
 (defun run! ()
   (rove:run :raft/tests/basic))

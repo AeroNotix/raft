@@ -4,6 +4,7 @@
    :operation
    :log-entry
    :persistent-hash-table
+   :retrieve-log-entry
    :apply-pending-log-entry))
 (in-package :raft/disk)
 
@@ -150,6 +151,9 @@
   (if (eq (f op) :set)
       (setf (gethash (operand op) (imht pht)) (value op))
       (remhash (operand op) (imht pht))))
+
+(defmethod retrieve-log-entry ((pht persistent-hash-table) key)
+  (gethash key (imht pht)))
 
 (defmethod apply-pending-log-entry ((pht persistent-hash-table) (le log-entry))
   (when (< (index le) (index pht))
