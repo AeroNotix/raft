@@ -9,7 +9,7 @@
 (teardown
   (uiop:delete-file-if-exists "new.lht"))
 
-(deftest serialize-and-deserialize-single-log
+(deftest serialize-and-deserialize-well-formed-single-log
     (let ((pht (make-instance 'persistent-hash-table :path "new.lht"))
           (log-entries (list
                         (make-instance 'log-entry :term 0 :index 0 :op
