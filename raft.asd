@@ -3,20 +3,24 @@
   :version "0.0.1"
   :description "Raft consensus algorithm"
   :license "BSD"
-  :depends-on (:flexi-streams
+  :depends-on (:log4cl
+               :flexi-streams
                :alexandria
                :bordeaux-threads
                :place-utils
                :usocket
                :usocket-server
 
+               :raft/conditions
+               :raft/peer
+               :raft/state
                :raft/msgs
+               :raft/peer
+               :raft/fsm
+               :raft/transport
+               :raft/memory-transport
                :raft/trivial
                :raft/binary
-               :raft/conditions
                :raft/disk)
-  :components ((:file "package")
-               (:file "transport")
-               (:file "memory-transport")
-               (:file "raft-state"))
+  :components ((:file "raft"))
   :serial t)

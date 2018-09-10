@@ -1,4 +1,16 @@
-(in-package :raft)
+(defpackage raft/state
+  (:use :common-lisp)
+  (:export #:raft-state
+           #:current-term
+           #:voted-for
+           #:log-entries
+           #:commit-index
+           #:last-applied
+           #:match-index
+           #:current-state
+           #:heartbeat-timout))
+
+(in-package :raft/state)
 
 
 (defclass raft-state ()
@@ -44,4 +56,18 @@ send to that server (initialized to leader last log index + 1)")
     :accessor match-index
     :documentation "for each server, index of highest log entry known
 to be replicated on server (initialized to 0, increases
-monotonically)")))
+monotonically)")
+
+   ;; Implementation-specific slots
+   (current-state
+    :initform :follower
+    :accessor current-state
+    :documentation "Each server should start in the follower state,
+transitioning between raft states as described in the paper. Possible
+modes: :follower, :candidate, :leader")
+   (heartbeat-timeout
+    :initarg :heartbeat-timeout
+    :accessor heartbeat-timeout
+    :documentation "A value that will determine if this raft server
+has experienced a timeout from not receiving AppendEntries RPCs in a
+timely manner")))
