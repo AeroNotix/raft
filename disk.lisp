@@ -111,16 +111,15 @@
       (length +log-entry-header+)))
 
 (defmethod deserialize-log-entry ((stream stream))
-  (identity (when (advance-stream-to-log-entry stream)
+  (handler-case (when (advance-stream-to-log-entry stream)
                   (let ((index (read-bigint stream))
                         (term (read-bigint stream))
                         (operation (deserialize-operation stream)))
                     (make-instance 'log-entry
                                    :index index
                                    :term term
-                                   :op operation))))
-  ;; (end-of-file () nil)
-  )
+                                   :op operation)))
+    (end-of-file () nil)))
 
 (defun spy (term)
   (format t "~A~%" term)
