@@ -29,5 +29,8 @@
       (ok (equal (retrieve-log-entry pht "Y") "2"))
       (ok (equal (retrieve-log-entry pht "Z") "3"))))
 
+(deftest attempt-deserialize-empty-file
+  (ok (make-instance 'persistent-hash-table :path "tests/empty-file")))
+
 (defun run! ()
   (rove:run :raft/tests/basic))
