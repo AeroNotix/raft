@@ -13,6 +13,7 @@
                :raft/msgs
                :raft/trivial
                :raft/binary
+               :raft/conditions
                :raft/disk)
   :components ((:file "package")
                (:file "transport")

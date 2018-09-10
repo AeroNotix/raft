@@ -1,5 +1,5 @@
 (defpackage :raft/disk
-  (:use :cl :raft/binary)
+  (:use :cl :raft/binary :raft/conditions)
   (:export
    :operation
    :log-entry
@@ -157,7 +157,9 @@
 
 (defmethod apply-pending-log-entry ((pht persistent-hash-table) (le log-entry))
   (when (< (index le) (index pht))
-    (error "Log entry too old"))
+    (error 'log-entry-too-old
+           :attempted-index (index le)
+           :highest-index (index pht)))
   (with-open-file (disk-hash-table (path pht)
                                    :element-type 'unsigned-byte
                                    :direction :io
