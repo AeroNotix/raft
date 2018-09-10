@@ -43,5 +43,11 @@
 (define-state-handler memory-transport :candidate (imt state (ae raft/msgs:append-entries))
   state)
 
-(define-state-handler memory-transport :follower (imt state (ae raft/msgs:append-entries))
+(define-state-handler memory-transport :follower (imt state (rv raft/msgs:request-votes))
+  state)
+
+(define-state-handler memory-transport :leader (imt state (rv raft/msgs:request-votes))
+  state)
+
+(define-state-handler memory-transport :candidate (imt state (rv raft/msgs:request-votes))
   state)
