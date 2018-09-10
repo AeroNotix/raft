@@ -11,17 +11,14 @@
 (in-package :raft/transport)
 
 
+(defclass transport () ())
+
 (defgeneric connect (transport server-id server-address other-transport))
 
 (defgeneric disconenct (transport server-id server-address))
 
+(defgeneric rpc-queue (transport))
+
 (defgeneric append-entries (transport server-id server-address append-entry))
 
-(defgeneric append-entries-response (transport server-id server-address append-entry-response))
-
 (defgeneric request-vote (transport server-id server-address request-vote))
-
-(defgeneric request-vote-response (transport server-id server-address request-vote-response))
-
-
-(defclass transport () ())
