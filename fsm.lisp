@@ -19,7 +19,8 @@
 (defgeneric state-machine-event (state-machine state-machine-state event))
 
 (defmethod state-machine-event :around (state-machine state-machine-state event)
-  (log:debug "State machine: ~A in state: ~A handling event: ~A" state-machine state-machine-state event))
+  (log:debug "State machine: ~A in state: ~A handling event: ~A" state-machine state-machine-state event)
+  (call-next-method))
 
 (defun apply-event (state-machine event)
   (multiple-value-bind (next-state recur-p)
