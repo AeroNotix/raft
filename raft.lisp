@@ -87,10 +87,9 @@ timely manner")
 
 (defmethod request-votes ((raft raft))
   (log:debug "~A requesting votes" raft)
-  (let* ((rs (internal-raft-state raft))
-         (rv (make-instance 'raft/msgs:request-vote
-                            :last-log-term (last-log-term rs)
-                            :last-log-index (last-log-index rs)
+  (let* ((rv (make-instance 'raft/msgs:request-vote
+                            :last-log-term (last-log-term raft)
+                            :last-log-index (last-log-index raft)
                             :candidate-id (server-id raft))))
     (loop for peer in (servers raft)
        do
@@ -98,12 +97,12 @@ timely manner")
 
 (defmethod start-leader-election ((raft raft))
   (log:warn "Starting leader election: ~A" raft)
-  (incf (current-term (internal-raft-state raft)))
+  (incf (current-term raft))
   (setf (votes raft) 0)
   (request-votes raft))
 
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
-  (setf (current-term (internal-raft-state raft)) (term rv)))
+  (setf (current-term raft) (term rv)))
 
 (defmethod become-leader ((raft raft))
   (log:debug "Raft instance ~A becoming leader" raft)
@@ -130,17 +129,15 @@ timely manner")
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
   (let ((rvr (make-instance 'raft/msgs:request-vote-response
-                            :successful-p (> (term rv) (current-term (internal-raft-state r)))
-                            :term (current-term (internal-raft-state r)))))
-    (return :candidate)
-
+                            :successful-p (> (term rv) (current-term raft))
+                            :term (current-term  r))))
     state))
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
   (log:debug "Candidate ~A received vote response ~A" r rv)
-  (when (and (eq (current-term (internal-raft-state r)) (vote-granted rv)))
+  (when (and (eq (current-term r) (vote-granted rv)))
     (incf (votes r)))
-  (when (> (term rv) (current-term (internal-raft-state r)))
+  (when (> (term rv) (current-term r))
     (cease-leader-election r rv)
     (return :follower))
   (when (>= (votes r) (quorum r))
