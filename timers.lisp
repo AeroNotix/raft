@@ -9,7 +9,9 @@
   (log:debug "starting new timer: ~A" n)
   (let* ((timed-out-channel (make-instance 'chanl:channel))
          (timer (sb-ext:make-timer
-                 (lambda () (chanl:send timed-out-channel t :blockp t))
+                 (lambda ()
+                   (chanl:send timed-out-channel t :blockp t)
+                   (log:debug "timer finished: ~A" n))
                  :name "after-channel"
                  :thread t)))
     (sb-ext:schedule-timer timer n)
