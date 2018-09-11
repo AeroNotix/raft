@@ -1,6 +1,7 @@
 (defpackage raft/msgs
   (:use :cl)
   (:export
+   #:raft-request
    #:append-entries
    #:append-entries-response
    #:request-vote
@@ -12,7 +13,9 @@ the definitions from page 4."))
 (in-package :raft/msgs)
 
 
-(defclass append-entries ()
+(defclass raft-request () ())
+
+(defclass append-entries (raft-request)
   ((term
     :initarg :term
     :initform nil
@@ -38,7 +41,7 @@ send more than one for efficiency)")
     :accessor leader-commit
     :documentation "leader's commitIndex")))
 
-(defclass append-entries-response ()
+(defclass append-entries-response (raft-request)
   ((term
     :initarg :term
     :accessor term
@@ -50,7 +53,8 @@ send more than one for efficiency)")
     :documentation "true if follower contained entry matching
 prev-log-index and prev-log-term")))
 
-(defclass request-vote ()
+
+(defclass request-vote (raft-request)
   ((term
     :initarg :term
     :accessor term
@@ -68,7 +72,7 @@ prev-log-index and prev-log-term")))
     :accessor last-log-term
     :documentation "term of candidate's last log entry (§5.4)")))
 
-(defclass request-vote-response ()
+(defclass request-vote-response (raft-request)
   ((term
     :initarg :term
     :accessor term

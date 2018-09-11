@@ -8,7 +8,9 @@
            #:last-applied
            #:match-index
            #:current-state
-           #:heartbeat-timout))
+           #:heartbeat-timout
+           #:last-log-index
+           #:last-log-term))
 
 (in-package :raft/state)
 
@@ -65,3 +67,12 @@ monotonically)")
     :documentation "Each server should start in the follower state,
 transitioning between raft states as described in the paper. Possible
 modes: :follower, :candidate, :leader")))
+
+
+(defmethod last-log-index ((rs raft-state))
+  (warn "last-log-index not doing the right thing")
+  0)
+
+(defmethod last-log-term ((rs raft-state))
+  (warn "last-log-term not doing the right thing")
+  0)

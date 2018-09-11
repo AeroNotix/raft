@@ -1,15 +1,20 @@
 (defpackage raft
-  (:use :common-lisp :chanl)
+  (:use :common-lisp :chanl :raft/state)
+  (:import-from #:raft/trivial
+                #:while)
   (:import-from #:raft/disk
                 #:persistent-hash-table
                 #:log-entry
                 #:operation)
+  (:import-from #:raft/state
+                #:current-term)
   (:import-from #:raft/transport
                 #:rpc-channel)
   (:import-from #:raft/memory-transport
                 #:memory-transport)
   (:import-from #:raft/transport
-                #:rpc-channel)
+                #:rpc-channel
+                #:request-vote)
   (:import-from #:raft/fsm
                 #:define-state-machine
                 #:define-state-handler
@@ -18,11 +23,19 @@
 (in-package :raft)
 
 
-(define-state-machine raft :follower ()
+(define-state-machine raft :follower (raft-state)
   ((transport
     :initarg :transport
     :initform nil
     :accessor transport)
+   (server-id
+    :initarg :server-id
+    :initform nil
+    :accessor server-id)
+   (servers
+    :initarg :servers
+    :initform nil
+    :accessor servers)
    (leader
     :accessor leader)
    (votes
@@ -39,13 +52,13 @@ has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
    (raft-state
     :initform (make-instance 'raft-state)
-    :accessor raft-state)))
+    :accessor internal-raft-state)))
 
 (defmethod raft/fsm:state ((raft raft))
-  (current-state (raft-state raft)))
+  (current-state raft))
 
 (defmethod (setf raft/fsm:state) (state (raft raft))
-  (setf (current-state (raft-state raft)) state))
+  (setf (current-state raft) state))
 
 (defmethod reset-heartbeat-timer ((raft raft))
   (when (and (heartbeat-timer raft)
@@ -60,10 +73,29 @@ timely manner")
     (setf (heartbeat-timer raft) hb-timer)
     (setf (heartbeat-channel raft) hb-channel)))
 
+(defmethod request-votes ((raft raft))
+  (log:debug "~A requesting votes" raft)
+  (let* ((rs (internal-raft-state raft))
+         (rv (make-instance 'raft/msgs:request-vote
+                            :last-log-term (last-log-term rs)
+                            :last-log-index (last-log-index rs)
+                            :candidate-id (server-id raft))))
+    (loop for peer in (servers raft)
+       do
+         (request-vote (transport raft) peer rv))))
+
 (defmethod start-leader-election ((raft raft))
-  (log:warn "Starting leader election due to missed heartbeat: ~A" raft)
-  (incf (current-term (raft-state raft)))
-  (setf (votes raft) 0))
+  (log:warn "Starting leader election: ~A" raft)
+  (incf (current-term (internal-raft-state raft)))
+  (setf (votes raft) 0)
+  (request-votes raft))
+
+(defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
+  (setf (current-term (internal-raft-state raft)) (term rv)))
+
+(defmethod become-leader ((raft raft))
+  (log:debug "Raft instance ~A becoming leader" raft)
+  (setf (leader raft) (local-address (transport raft))))
 
 (define-state-handler raft :follower (r state :heartbeat-timeout)
   (start-leader-election r)
@@ -85,12 +117,39 @@ timely manner")
   state)
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
-  state)
+  (let ((rvr (make-instance 'raft/msgs:request-vote-response
+                            :successful-p (> (term rv) (current-term (internal-raft-state r)))
+                            :term (current-term (internal-raft-state r)))))
+    (return :candidate)
+
+    state))
+
+(define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
+  (log:debug "Candidate ~A received vote response ~A" r rv)
+  (when (and (eq (current-term (internal-raft-state r)) (vote-granted rv)))
+    (incf (votes r)))
+  (when (> (term rv) (current-term (internal-raft-state r)))
+    (cease-leader-election r rv)
+    (return :follower))
+  (when (>= (votes r) (quorum r))
+    (become-leader r)
+    (return :leader)))
 
 (defmethod run ((raft raft))
   (new-heartbeat-timer raft)
-  (select
-    ((recv (rpc-channel (transport raft)) event)
-     (apply-event raft event))
-    ((recv (heartbeat-channel raft))
-     (apply-event raft :heartbeat-timeout))))
+  (let* ((exit-channel (make-instance 'chanl:channel))
+         (raft-thread (bt:make-thread
+                       (lambda ()
+                         (while (not (recv exit-channel :blockp nil))
+                           (select
+                             ((recv (rpc-channel (transport raft)) event)
+                              (apply-event raft event))
+                             ((recv (heartbeat-channel raft))
+                              (apply-event raft :heartbeat-timeout))
+                             (t
+                              ;; yeah, oh yeah, you fucking like that?
+                              ;; chanl is garbage. It spins the
+                              ;; processor in a select
+                              (sleep 0.1)))))
+                       :name (format nil "RAFT-INSTANCE: ~A" (server-id raft)))))
+    (values exit-channel raft-thread)))

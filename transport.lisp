@@ -9,20 +9,25 @@
    #:append-entries
    #:append-entries-response
    #:request-vote
-   #:request-vote-response))
+   #:request-vote-response
+   #:encode-peer))
 (in-package :raft/transport)
 
 
 (defclass transport () ())
 
-(defgeneric connect (transport server-id server-address other-transport))
+(defgeneric connect (transport server-address other-transport))
 
-(defgeneric disconenct (transport server-id server-address))
+(defgeneric disconenct (transport server-address))
 
 (defgeneric local-address (transport))
 
 (defgeneric rpc-channel (transport))
 
-(defgeneric append-entries (transport server-id server-address append-entry))
+(defgeneric append-entries (transport server-address append-entry))
 
-(defgeneric request-vote (transport server-id server-address request-vote))
+(defgeneric request-vote (transport server-address request-vote))
+
+(defgeneric request-vote-response (transport request-vote-request term successful-p))
+
+(defgeneric encode-peer (transport server-address))
