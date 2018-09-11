@@ -4,6 +4,8 @@
    #:transport
    #:connect
    #:disconnect
+   #:local-address
+   #:rpc-channel
    #:append-entries
    #:append-entries-response
    #:request-vote
@@ -17,7 +19,9 @@
 
 (defgeneric disconenct (transport server-id server-address))
 
-(defgeneric rpc-queue (transport))
+(defgeneric local-address (transport))
+
+(defgeneric rpc-channel (transport))
 
 (defgeneric append-entries (transport server-id server-address append-entry))
 
