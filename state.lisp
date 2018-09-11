@@ -64,10 +64,4 @@ monotonically)")
     :accessor current-state
     :documentation "Each server should start in the follower state,
 transitioning between raft states as described in the paper. Possible
-modes: :follower, :candidate, :leader")
-   (heartbeat-timeout
-    :initarg :heartbeat-timeout
-    :accessor heartbeat-timeout
-    :documentation "A value that will determine if this raft server
-has experienced a timeout from not receiving AppendEntries RPCs in a
-timely manner")))
+modes: :follower, :candidate, :leader")))
