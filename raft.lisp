@@ -51,15 +51,26 @@
     :documentation "A value that will determine if this raft server
 has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
-   (raft-state
-    :initform (make-instance 'raft-state)
-    :accessor internal-raft-state)))
+   (shutdown-channel
+    :initform nil
+    :accessor shutdown-channel)
+   (raft-thread
+    :initform nil
+    :accessor raft-thread)))
 
 (defmethod raft/fsm:state ((raft raft))
   (current-state raft))
 
 (defmethod (setf raft/fsm:state) (state (raft raft))
   (setf (current-state raft) state))
+
+(defmethod shutdown ((raft raft) &key (force-p nil) (force-wait 0))
+  ;; TODO, clean up any transport connections/threads/locks
+  (send (shutdown-channel raft) t)
+  (when force-p
+    (warn "Forcing threads to close is inadvisable")
+    (sleep force-wait)
+    (bt:destroy-thread (raft-thread raft))))
 
 (defmethod reset-heartbeat-timer ((raft raft))
   (when (and (heartbeat-timer raft)
@@ -138,10 +149,10 @@ timely manner")
 
 (defmethod run ((raft raft))
   (new-heartbeat-timer raft)
-  (let* ((exit-channel (make-instance 'chanl:channel))
+  (let* ((shutdown-channel (make-instance 'chanl:channel))
          (raft-thread (bt:make-thread
                        (lambda ()
-                         (while (not (recv exit-channel :blockp nil))
+                         (while (not (recv shutdown-channel :blockp nil))
                            (select
                              ((recv (rpc-channel (transport raft)) event)
                               (apply-event raft event))
@@ -153,4 +164,6 @@ timely manner")
                               ;; processor in a select
                               (sleep 0.1)))))
                        :name (format nil "RAFT-INSTANCE: ~A" (server-id raft)))))
-    (values exit-channel raft-thread)))
+    (setf (shutdown-channel raft) shutdown-channel
+          (raft-thread raft) raft-thread)
+    raft))
