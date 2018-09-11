@@ -32,13 +32,16 @@
   `(progn
      (defclass ,name ,(append (list 'finite-state-machine) superclasses)
        ,slots)
-     (defmethod initialize-instance :before ((fsm ,name) &key)
-                (setf (state fsm) ,initial-state))))
+     (defmethod initialize-instance :after ((fsm ,name) &key)
+       (setf (state fsm) ,initial-state))))
 
 (defmacro define-state-handler (state-machine-type state-machine-state
                                 (state-machine-symbol state-symbol event-specialiser)
-                        &body body)
-  `(defmethod state-machine-event ((,state-machine-symbol ,state-machine-type)
-                                   (,state-symbol (eql ,state-machine-state))
-                                   ,event-specialiser)
-     ,@body))
+                                &body body)
+  (let ((symb (gensym)))
+    `(defmethod state-machine-event ((,state-machine-symbol ,state-machine-type)
+                                     (,state-symbol (eql ,state-machine-state))
+                                     ,(if (consp event-specialiser)
+                                          event-specialiser
+                                          `(,symb (eql ,event-specialiser))))
+       ,@body)))
