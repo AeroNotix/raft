@@ -11,7 +11,9 @@
                :usocket
                :usocket-server
                :chanl
+               :trivial-timers
 
+               :raft/timers
                :raft/conditions
                :raft/peer
                :raft/state
