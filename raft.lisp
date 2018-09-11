@@ -56,7 +56,7 @@ timely manner")
 
 (defmethod new-heartbeat-timer ((raft raft))
   (reset-heartbeat-timer raft)
-  (multiple-value-bind (hb-channel hb-timer) (raft/timers:after 3)
+  (multiple-value-bind (hb-channel hb-timer) (raft/timers:after (1+ (random 3)))
     (setf (heartbeat-timer raft) hb-timer)
     (setf (heartbeat-channel raft) hb-channel)))
 
