@@ -41,6 +41,7 @@
    (votes
     :initform 0
     :accessor votes)
+   ;; TODO: heartbeat fields into their own class
    (heartbeat-timer
     :initform nil
     :accessor heartbeat-timer)
