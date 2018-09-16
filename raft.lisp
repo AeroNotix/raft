@@ -42,6 +42,9 @@
    (votes
     :initform 0
     :accessor votes)
+   (voted-for
+    :initform nil
+    :accessor voted-for)
    ;; TODO: heartbeat fields into their own class
    (heartbeat-timer
     :initform nil
@@ -119,7 +122,8 @@ timely manner")
 (defmethod start-leader-election ((raft raft))
   (log:warn "Starting leader election: ~A" raft)
   (incf (current-term raft))
-  (setf (votes raft) 0)
+  (setf (votes raft) 1)
+  (setf (voted-for raft) (local-address (transport raft)))
   (request-votes raft))
 
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
