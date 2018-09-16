@@ -161,7 +161,9 @@ timely manner")
   state)
 
 (define-state-handler raft :leader (r state (ae raft/msgs:append-entries))
-  state)
+  "If AppendEntries RPC received from new leader: convert to follower"
+  (when (> (raft/msgs:term ae) (current-term r))
+    (values :follower *recur-p*)))
 
 (define-state-handler raft :candidate (r state (ae raft/msgs:append-entries))
   "If AppendEntries RPC received from new leader: convert to follower"
