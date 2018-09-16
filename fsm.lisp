@@ -5,7 +5,8 @@
    #:define-state-machine
    #:define-state-handler
    #:state-machine
-   #:state))
+   #:state
+   #:*recur-p*))
 (in-package :raft/fsm)
 
 
@@ -15,6 +16,8 @@
     :initform :default
     :accessor state
     :documentation "The current state of the state-machine.")))
+
+(defparameter *recur-p* t)
 
 (defgeneric state-machine-event (state-machine state-machine-state event))
 
@@ -26,7 +29,7 @@
   (multiple-value-bind (next-state recur-p)
       (state-machine-event state-machine (state state-machine) event)
     (setf (state state-machine) next-state)
-    (when recur-p
+    (when (eq recur-p *recur-p*)
       (apply-event state-machine event))))
 
 (defmacro define-state-machine (name initial-state superclasses slots)
