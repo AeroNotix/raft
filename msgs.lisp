@@ -26,8 +26,11 @@ the definitions from page 4."))
    (leader-id
     :initarg :leader-id
     :accessor leader-id
-    :documentation "so follower can redirect clients prev-log-index
-index of log entry immediately preceding new ones")
+    :documentation "so follower can redirect clients")
+   (prev-log-index
+    :initarg :prev-log-index
+    :accessor prev-log-index
+    :documentation "index of log entry immediately preceding new ones")
    (prev-tog-term
     :initarg :prev-log-term
     :accessor prev-log-term
