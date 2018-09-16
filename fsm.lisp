@@ -45,4 +45,5 @@
                                      ,(if (consp event-specialiser)
                                           event-specialiser
                                           `(,symb (eql ,event-specialiser))))
-       ,@body)))
+       (declare (ignorable ,symb ,state-machine-symbol ,state-symbol))
+       (block nil ,@body))))
