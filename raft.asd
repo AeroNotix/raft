@@ -12,6 +12,7 @@
                :usocket-server
                :chanl
                :trivial-timers
+               :cl-store
 
                :raft/timers
                :raft/conditions
@@ -20,6 +21,7 @@
                :raft/msgs
                :raft/peer
                :raft/fsm
+               :raft/serialization
                :raft/transport
                :raft/memory-transport
                :raft/trivial
