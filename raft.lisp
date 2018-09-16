@@ -110,15 +110,30 @@ timely manner")
     (setf (heartbeat-timer raft) hb-timer)
     (setf (heartbeat-channel raft) hb-channel)))
 
+(defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
+  (loop for peer in (servers raft)
+     do
+       (funcall method (transport raft) peer rr)))
+
 (defmethod request-votes ((raft raft))
   (log:debug "~A requesting votes" raft)
   (let* ((rv (make-instance 'raft/msgs:request-vote
                             :last-log-term (last-log-term raft)
                             :last-log-index (last-log-index raft)
                             :candidate-id (server-id raft))))
-    (loop for peer in (servers raft)
-       do
-         (request-vote (transport raft) peer rv))))
+    (send-simple-rpc raft #'raft/transport:request-vote rv)))
+
+(defmethod send-heartbeats ((raft raft))
+  (let ((ae (make-instance 'raft/msgs:append-entries
+                           :term (current-term raft)
+                           :leader-id (server-id raft)
+                           :prev-log-index (last-applied raft)
+                           ;; not correct, prev-log-term must be the
+                           ;; term of the *committed* entry. Fix me.
+                           :prev-log-term (current-term raft)
+                           :entries nil
+                           :leader-commit (commit-index raft))))
+    (send-simple-rpc raft #'raft/transport:append-entries ae)))
 
 (defmethod start-leader-election ((raft raft))
   (log:warn "Starting leader election: ~A" raft)
@@ -137,6 +152,10 @@ timely manner")
 (define-state-handler raft :follower (r state :heartbeat-timeout)
   (start-leader-election r)
   :candidate)
+
+(define-state-handler raft :leader (r state :heartbeat-timeout)
+  (send-heartbeats r)
+  :leader)
 
 (define-state-handler raft :follower (r state (ae raft/msgs:append-entries))
   state)
