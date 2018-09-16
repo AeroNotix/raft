@@ -47,7 +47,7 @@ committed (initialized to 0, increases monotonically)")
     :documentation "index of highest log entry applied to state
 machine (initialized to 0, increases monotonically)")
 
-   ;; volatile state on leaders (reinitialize after alection)
+   ;; volatile state on leaders (reinitialize after election)
    (next-index
     :initform (make-hash-table)
     :accessor next-index
