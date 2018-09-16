@@ -64,6 +64,26 @@ timely manner")
 (defmethod (setf raft/fsm:state) (state (raft raft))
   (setf (current-state raft) state))
 
+(defmethod state-check ((raft raft) state-query)
+  (eq (state raft) state-query))
+
+(defmethod candidate-p ((raft raft))
+  (state-check raft :candidate))
+
+(defmethod follower-p ((raft raft))
+  (state-check raft :follower))
+
+(defmethod leader-p ((raft raft))
+  (state-check raft :leader))
+
+(defmethod votes-required ((raft raft))
+  (floor (length (servers raft)) 2))
+
+(defmethod quorum-achieved-p ((raft raft))
+  (and (candidate-p raft)
+       (>= (votes raft)
+           (votes-required raft))))
+
 (defmethod shutdown ((raft raft) &key (force-p nil) (force-wait 0))
   ;; TODO, clean up any transport connections/threads/locks
   (send (shutdown-channel raft) t)
@@ -140,7 +160,7 @@ timely manner")
   (when (> (term rv) (current-term r))
     (cease-leader-election r rv)
     (return :follower))
-  (when (>= (votes r) (quorum r))
+  (when (quorum-achieved-p r)
     (become-leader r)
     (return :leader)))
 
