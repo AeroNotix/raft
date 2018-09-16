@@ -5,7 +5,9 @@
    #:append-entries
    #:append-entries-response
    #:request-vote
-   #:request-vote-response)
+   #:request-vote-response
+   #:term
+   #:vote-granted)
   (:documentation "All RPC definitions are taken directly from the
 Raft paper located at: https://raft.github.io/raft.pdf. In particular
 the definitions from page 4."))

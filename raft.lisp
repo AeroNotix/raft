@@ -9,7 +9,8 @@
   (:import-from #:raft/state
                 #:current-term)
   (:import-from #:raft/transport
-                #:rpc-channel)
+                #:rpc-channel
+                #:local-address)
   (:import-from #:raft/memory-transport
                 #:memory-transport)
   (:import-from #:raft/transport
@@ -122,7 +123,7 @@ timely manner")
   (request-votes raft))
 
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
-  (setf (current-term raft) (term rv)))
+  (setf (current-term raft) (raft/msgs:term rv)))
 
 (defmethod become-leader ((raft raft))
   (log:debug "Raft instance ~A becoming leader" raft)
@@ -149,15 +150,16 @@ timely manner")
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
   (let ((rvr (make-instance 'raft/msgs:request-vote-response
-                            :successful-p (> (term rv) (current-term raft))
-                            :term (current-term  r))))
+                            :successful-p (> (raft/msgs:term rv) (current-term r))
+                            :term (current-term r))))
+    (declare (ignore rvr))
     state))
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
   (log:debug "Candidate ~A received vote response ~A" r rv)
-  (when (and (eq (current-term r) (vote-granted rv)))
+  (when (and (eq (current-term r) (raft/msgs:vote-granted rv)))
     (incf (votes r)))
-  (when (> (term rv) (current-term r))
+  (when (> (raft/msgs:term rv) (current-term r))
     (cease-leader-election r rv)
     (return :follower))
   (when (quorum-achieved-p r)
