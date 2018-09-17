@@ -18,7 +18,7 @@
 
 (defgeneric connect (transport server-address other-transport))
 
-(defgeneric disconenct (transport server-address))
+(defgeneric disconnect (transport server-address))
 
 (defgeneric local-address (transport))
 
