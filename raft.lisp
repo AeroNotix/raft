@@ -1,5 +1,6 @@
 (defpackage raft
   (:use :common-lisp :chanl :raft/state)
+  (:export #:make-raft-instance)
   (:import-from #:raft/trivial
                 #:while)
   (:import-from #:raft/state
@@ -51,6 +52,7 @@
 has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
    (persister
+    :initarg :persister
     :initform nil
     :accessor persister)
    (shutdown-channel
@@ -65,6 +67,11 @@ timely manner")
 
 (defmethod (setf raft/fsm:state) (state (raft raft))
   (setf (current-state raft) state))
+
+(defmethod connect-to-peers ((raft raft))
+  (loop for server in servers
+     do
+       (raft/transport:connect (transport raft) peer)))
 
 (defmethod state-check ((raft raft) state-query)
   (eq (state raft) state-query))
@@ -193,8 +200,8 @@ timely manner")
 
 (defun make-raft-instance (server-id servers transport persister &optional serializer)
   (let ((transport (if serializer
-                       (make-instance transport :serializer (make-instance serializer))
-                       (make-instance transport))))
+                       (make-instance transport :server-id server-id :serializer (make-instance serializer))
+                       (make-instance transport :server-id server-id))))
     (make-instance 'raft
                    :server-id server-id
                    :servers servers
@@ -205,6 +212,7 @@ timely manner")
   (new-heartbeat-timer raft)
   (let* ((shutdown-channel (make-instance 'chanl:channel))
          (raft-thread (bt:make-thread
+                       (connect-to-peers raft)
                        (lambda ()
                          (while (not (recv shutdown-channel :blockp nil))
                            (select

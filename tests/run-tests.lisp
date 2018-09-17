@@ -8,7 +8,10 @@
   (declaim (optimize sb-cover:store-coverage-data)))
 
 (ql:quickload :raft/tests/basic)
-(raft/tests/basic::run!)
+(ql:quickload :raft/tests/memory-raft)
+
+(raft/tests/basic:run!)
+(raft/tests/memory-raft::run!)
 
 #+sbcl
 (progn

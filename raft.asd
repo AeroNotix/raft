@@ -13,6 +13,7 @@
                :chanl
                :trivial-timers
                :cl-store
+               :uuid
 
                :raft/timers
                :raft/conditions

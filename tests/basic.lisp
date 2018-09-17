@@ -3,8 +3,8 @@
         :raft
         :raft/persistence
         :raft/persistent-hash-table
-        :rove))
-
+        :rove)
+  (:export #:run!))
 (in-package :raft/tests/basic)
 
 (defhook :before
