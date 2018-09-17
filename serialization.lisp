@@ -1,7 +1,8 @@
 (defpackage :raft/serialization
   (:use :cl)
   (:export #:serializer
-           #:make-basic-serializer))
+           #:make-basic-serializer
+           #:cl-store-serializer))
 (in-package :raft/serialization)
 
 

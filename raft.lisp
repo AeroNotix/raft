@@ -6,8 +6,7 @@
   (:import-from #:raft/state
                 #:current-term)
   (:import-from #:raft/transport
-                #:rpc-channel
-                #:local-address)
+                #:rpc-channel)
   (:import-from #:raft/transport
                 #:rpc-channel
                 #:request-vote)
@@ -143,7 +142,7 @@ timely manner")
   (log:warn "Starting leader election: ~A" raft)
   (incf (current-term raft))
   (setf (votes raft) 1)
-  (setf (voted-for raft) (local-address (transport raft)))
+  (setf (voted-for raft) (server-id raft))
   (request-votes raft))
 
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
