@@ -5,7 +5,7 @@
 (in-package :raft/serialization)
 
 
-(defclass serializer () NIL
+(defclass serializer () ()
   (:documentation "base class for serializers"))
 
 (defgeneric serialize (serializer thing stream))
