@@ -7,8 +7,6 @@
   (:import-from #:raft/transport
                 #:rpc-channel
                 #:local-address)
-  (:import-from #:raft/memory-transport
-                #:memory-transport)
   (:import-from #:raft/transport
                 #:rpc-channel
                 #:request-vote)
