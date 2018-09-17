@@ -27,6 +27,6 @@
                :raft/trivial
                :raft/binary
                :raft/persistence
-               :raft/disk)
+               :raft/persistent-hash-table)
   :components ((:file "raft"))
   :serial t)

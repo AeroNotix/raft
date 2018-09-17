@@ -1,4 +1,4 @@
-(defpackage :raft/disk
+(defpackage :raft/persistent-hash-table
   (:use :cl
         :raft/binary
         :raft/conditions
@@ -7,7 +7,7 @@
    :persistent-hash-table
    :retrieve-log-entry
    :apply-log-entry))
-(in-package :raft/disk)
+(in-package :raft/persistent-hash-table)
 
 
 (defclass persistent-hash-table (persister)

@@ -1,8 +1,8 @@
 (defpackage raft/tests/basic
   (:use :cl
         :raft
-        :raft/disk
         :raft/persistence
+        :raft/persistent-hash-table
         :rove))
 
 (in-package :raft/tests/basic)
