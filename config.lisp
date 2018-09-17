@@ -1,8 +1,6 @@
 (defpackage :raft/config
   (:use :cl)
-  (:export #:get
-           #:set
-           #:default-transport
+  (:export #:default-transport
            #:default-serializer
            #:default-persister))
 (in-package #:raft/config)

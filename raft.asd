@@ -15,7 +15,6 @@
                :cl-store
                :uuid
 
-               :raft/config
                :raft/timers
                :raft/conditions
                :raft/peer
@@ -29,6 +28,7 @@
                :raft/trivial
                :raft/binary
                :raft/persistence
-               :raft/persistent-hash-table)
+               :raft/persistent-hash-table
+               :raft/config)
   :components ((:file "raft"))
   :serial t)
