@@ -6,7 +6,6 @@
    #:serializer
    #:connect
    #:disconnect
-   #:local-address
    #:rpc-channel
    #:append-entries
    #:append-entries-response
@@ -29,8 +28,6 @@
 (defgeneric connect (transport server-address))
 
 (defgeneric disconnect (transport server-address))
-
-(defgeneric local-address (transport))
 
 (defgeneric rpc-channel (transport))
 
