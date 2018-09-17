@@ -39,9 +39,9 @@
    (votes
     :initform 0
     :accessor votes)
-   (voted-for
+   (voted-in-election
     :initform nil
-    :accessor voted-for)
+    :accessor voted-in-election)
    ;; TODO: heartbeat fields into their own class
    (heartbeat-timer
     :initform nil
@@ -182,11 +182,15 @@ timely manner")
   state)
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
-  (let ((rvr (make-instance 'raft/msgs:request-vote-response
-                            :successful-p (> (raft/msgs:term rv) (current-term r))
-                            :term (current-term r))))
-    (declare (ignore rvr))
-    state))
+  ;; if we get multiple RequestVote RPCs for the same election, skip.
+  (unless (eq (raft/msgs:term rv) (voted-in-election r))
+    (let ((rvr (make-instance 'raft/msgs:request-vote-response
+                              :vote-granted (> (raft/msgs:term rv) (current-term r))
+                              :term (current-term r))))
+      (when (raft/msgs:vote-granted rvr)
+        (setf (voted-in-election r) (raft/msgs:term :rv))
+        (return :follower))))
+  :candidate)
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
   (log:debug "Candidate ~A received vote response ~A" r rv)
