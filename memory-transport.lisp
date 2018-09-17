@@ -5,25 +5,18 @@
 
 
 (defclass memory-transport (transport)
-  ((serializer
-    :initarg serializer
-    :initform (raft/serialization:make-basic-serializer)
-    :accessor serializer)
-   (peers
+  ((peers
     :initarg :peers
     :initform (make-hash-table)
     :accessor peers)
    (rpc-channel
     :initform (make-instance 'chanl:bounded-channel :size 128)
-    :accessor rpc-channel)
-   (peers-lock
-    :accessor peers-lock)))
+    :accessor rpc-channel)))
 
 
 (defmethod trivial-rpc ((mt memory-transport) server-address (rpc raft/msgs:raft-request))
   (log:debug "~A sending ~A to ~A" mt server-address rpc)
-  (let ((peer (bt:with-lock-held ((peers-lock mt))
-                (gethash server-address (peers mt)))))
+  (let ((peer (gethash server-address (peers mt))))
     (if peer
         (chanl:send (rpc-channel peer) rpc :blockp nil)
         (log:warn "~A attempted to ~A on a peer we have not connected to" mt rpc))))
@@ -32,12 +25,10 @@
   (setf (peers-lock mt) (bt:make-lock (format nil "~A" mt))))
 
 (defmethod connect ((mt memory-transport) server-address (omt memory-transport))
-  (bt:with-lock-held ((peers-lock mt))
-    (setf (gethash server-address (peers mt)) omt)))
+  (setf (gethash server-address (peers mt)) omt))
 
 (defmethod disconnect ((mt memory-transport) server-address)
-  (bt:with-lock-held ((peers-lock mt))
-    (remhash server-address (peers mt))))
+  (remhash server-address (peers mt)))
 
 (defmethod append-entries ((mt memory-transport) server-address (ae raft/msgs:append-entries))
   (trivial-rpc mt server-address ae))
