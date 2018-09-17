@@ -19,9 +19,15 @@
                              'raft/memory-transport:memory-transport
                              'raft/persistent-hash-table:persistent-hash-table))))
 
+(defun create-in-memory-cluster (cluster-size)
+  (let* ((cluster-size 5)
+         (rafts (make-n-rafts cluster-size)))
+    (mapcar #'raft::connect-to-peers rafts)
+    rafts))
+
 (deftest simple-peering
     (let* ((cluster-size 5)
-           (rafts (make-n-rafts cluster-size))
+           (rafts (create-in-memory-cluster cluster-size))
            (validate-peer-count (compose
                                  (lambda (n) (eq n cluster-size))
                                  #'hash-table-count
@@ -30,7 +36,6 @@
       (ok (eq (length rafts) cluster-size))
       ;; XXX: checking implementation details
       (ok (eq (hash-table-count raft/memory-transport::*memory-transport-directory*) cluster-size))
-      (mapcar #'raft::connect-to-peers rafts)
       (ok (every #'identity (mapcar validate-peer-count rafts)))))
 
 (defun run! ()
