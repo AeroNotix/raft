@@ -31,8 +31,8 @@
            (validate-peer-count (compose
                                  (lambda (n) (eq n cluster-size))
                                  #'hash-table-count
-                                 #'raft/memory-transport::peers
-                                 #'raft::transport)))
+                                 #'raft/memory-transport:peers
+                                 #'raft:transport)))
       (ok (eq (length rafts) cluster-size))
       ;; XXX: checking implementation details
       (ok (eq (hash-table-count raft/memory-transport::*memory-transport-directory*) cluster-size))
