@@ -6,17 +6,15 @@
    #:index
    #:term
    #:operation
-   #:serializer
+   #:persister
    #:simple-operation
    #:simple-log-entry
-   #:serialize-operation
-   #:deserialize-operation
-   #:serialize-log-entry
-   #:deserialize-log-entry))
+   #:apply-log-entry
+   #:retrieve-log-entry))
 (in-package :raft/persistence)
 
 
-(defclass serializer () ())
+(defclass persister () ())
 
 (defclass simple-operation ()
   ((name
@@ -33,12 +31,6 @@
     (assert (or (eq :set name)
                 (eq :del name))
             (name) "The operation must be one of :SET or :DEL, ~S provided" f)))
-
-(defgeneric serialize-operation (serializer operation stream)
-  (:documentation "Takes an operation and encodes it into a stream"))
-
-(defgeneric deserialize-operation (serializer stream)
-  (:documentation "Takes a stream and reads an operation from it"))
 
 (defclass simple-log-entry ()
   ((index
@@ -59,8 +51,10 @@
   (format stream "#<LOG-ENTRY INDEX: ~D TERM: ~D OP: ~A>"
           (raft/persistence:index le) (term le) (op le)))
 
-(defgeneric serialize-log-entry (serializer log-entry stream)
-  (:documentation "Takes a log entry and encodes it into a stream"))
+(defgeneric apply-log-entry (persister log-entry)
+  (:documentation "takes a log-entry and passes it to the persister
+  to persist to the backend persistence layer"))
 
-(defgeneric deserialize-log-entry (serializer stream)
-  (:documentation "takes a stream and reads a log entry from it"))
+(defgeneric retrieve-log-entry (persister key)
+  (:documentation "takes a key, which represents the target of a
+  previous operation (as in a key:value store) and returns the value associated with it"))

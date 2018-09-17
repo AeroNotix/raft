@@ -16,7 +16,7 @@
 (defun apply-log-entries (pht log-entries)
   (loop for log-entry in log-entries
      do
-       (apply-pending-log-entry pht log-entry)))
+       (apply-log-entry pht log-entry)))
 
 (defmacro make-log-entry (term index name operands)
   `(make-instance 'simple-log-entry :term ,term :index ,index :operation

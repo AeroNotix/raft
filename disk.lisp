@@ -4,17 +4,13 @@
         :raft/conditions
         :raft/persistence)
   (:export
-   :serialize-operation
-   :deserialize-operation
-   :serialize-log-entry
-   :deserialize-log-entry
    :persistent-hash-table
    :retrieve-log-entry
-   :apply-pending-log-entry))
+   :apply-log-entry))
 (in-package :raft/disk)
 
 
-(defclass persistent-hash-table (serializer)
+(defclass persistent-hash-table (persister)
   ((path
     :initarg :path
     :accessor path)
@@ -86,7 +82,7 @@
                               collect entry) #'< :key #'index)
      do
        (progn
-         (apply-log-entry pht (operation log-entry))
+         (apply-operation pht (operation log-entry))
          (setf (stored-index pht) (raft/persistence:index log-entry)))))
 
 (defmethod initialize-instance :after ((pht persistent-hash-table) &key)
@@ -99,7 +95,7 @@
     (apply-disk-log-entries pht disk-hash-table)
     pht))
 
-(defmethod apply-log-entry ((pht persistent-hash-table) (op simple-operation))
+(defmethod apply-operation ((pht persistent-hash-table) (op simple-operation))
   (if (eq (name op) :set)
       (setf (gethash (first (operands op)) (imht pht)) (second (operands op)))
       (remhash (first (operands op)) (imht pht))))
@@ -107,7 +103,7 @@
 (defmethod retrieve-log-entry ((pht persistent-hash-table) key)
   (gethash key (imht pht)))
 
-(defmethod apply-pending-log-entry ((pht persistent-hash-table) (le simple-log-entry))
+(defmethod apply-log-entry ((pht persistent-hash-table) (le simple-log-entry))
   (when (< (index le) (stored-index pht))
     (error 'log-entry-too-old
            :attempted-index (raft/persistence:index le)
@@ -118,5 +114,5 @@
                                    :if-does-not-exist :create
                                    :if-exists :append)
     (serialize-log-entry pht le disk-hash-table))
-  (apply-log-entry pht (operation le))
+  (apply-operation pht (operation le))
   (setf (stored-index pht) (raft/persistence:index le)))
