@@ -2,6 +2,8 @@
   (:use :cl)
   (:export
    #:transport
+   #:server-id
+   #:serializer
    #:connect
    #:disconnect
    #:local-address
@@ -15,12 +17,16 @@
 
 
 (defclass transport ()
-  ((serializer
-    :initarg serializer
+  ((server-id
+    :initarg :server-id
+    :initform (error "Transports require a server-id, else they cannot uniquely identify themselves")
+    :accessor server-id)
+   (serializer
+    :initarg :serializer
     :initform (raft/serialization:make-basic-serializer)
     :accessor serializer)))
 
-(defgeneric connect (transport server-address other-transport))
+(defgeneric connect (transport server-address))
 
 (defgeneric disconnect (transport server-address))
 

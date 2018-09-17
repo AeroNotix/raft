@@ -3,6 +3,8 @@
   (:export :memory-transport))
 (in-package :raft/memory-transport)
 
+(defparameter *memory-transport-directory-lock* (bt:make-lock "memory-transport-directory-lock"))
+(defparameter *memory-transport-directory* (make-hash-table :test 'equal))
 
 (defclass memory-transport (transport)
   ((peers
@@ -22,10 +24,16 @@
         (log:warn "~A attempted to ~A on a peer we have not connected to" mt rpc))))
 
 (defmethod initialize-instance :after ((mt memory-transport) &key)
-  (setf (peers-lock mt) (bt:make-lock (format nil "~A" mt))))
+  (bt:with-lock-held (*memory-transport-directory-lock*)
+    (setf (gethash (server-id mt) *memory-transport-directory*) mt)))
 
-(defmethod connect ((mt memory-transport) server-address (omt memory-transport))
-  (setf (gethash server-address (peers mt)) omt))
+(defun find-memory-transport (server-address)
+  (bt:with-lock-held (*memory-transport-directory-lock*)
+    (gethash server-id *memory-transport-directory*)))
+
+(defmethod connect ((mt memory-transport) server-address)
+  (alexandria:when-let ((peer (find-memory-transport server-address)))
+    (setf (gethash server-address (peers mt)) peer)))
 
 (defmethod disconnect ((mt memory-transport) server-address)
   (remhash server-address (peers mt)))
