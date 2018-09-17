@@ -213,8 +213,8 @@ timely manner")
   (new-heartbeat-timer raft)
   (let* ((shutdown-channel (make-instance 'chanl:channel))
          (raft-thread (bt:make-thread
-                       (connect-to-peers raft)
                        (lambda ()
+                         (connect-to-peers raft)
                          (while (not (recv shutdown-channel :blockp nil))
                            (select
                              ((recv (rpc-channel (transport raft)) event)
