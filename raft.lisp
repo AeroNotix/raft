@@ -1,6 +1,8 @@
 (defpackage raft
   (:use :common-lisp :chanl :raft/state)
-  (:export #:make-raft-instance)
+  (:export #:make-raft-instance
+           #:transport
+           #:run-state-machine)
   (:import-from #:raft/trivial
                 #:while)
   (:import-from #:raft/state
@@ -207,7 +209,7 @@ timely manner")
                    :transport transport
                    :persister persister)))
 
-(defmethod run ((raft raft))
+(defmethod run-state-machine ((raft raft))
   (new-heartbeat-timer raft)
   (let* ((shutdown-channel (make-instance 'chanl:channel))
          (raft-thread (bt:make-thread
