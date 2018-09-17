@@ -15,6 +15,7 @@
                :cl-store
                :uuid
 
+               :raft/config
                :raft/timers
                :raft/conditions
                :raft/peer
