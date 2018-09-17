@@ -30,12 +30,11 @@
   (with-slots (name operands) operation
     (write-byte (if (eq :set name) 0 1) stream)
     (write-byte (length operands) stream)
-    (when (first operands)
-      (write-byte (length (first operands)) stream)
-      (write-sequence (flexi-streams:string-to-octets (first operands)) stream))
-    (when (second operands)
-      (write-byte (length (second operands)) stream)
-      (write-sequence (flexi-streams:string-to-octets (second operands)) stream))))
+    (loop for operand in operands
+       do
+         (progn
+           (write-byte (length operand) stream)
+           (write-sequence (flexi-streams:string-to-octets operand) stream)))))
 
 (defmethod deserialize-operation ((pht persistent-hash-table) (stream stream))
   (let* ((op (if (eq (read-byte stream) 0) :set :del))
