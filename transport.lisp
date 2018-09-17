@@ -14,7 +14,11 @@
 (in-package :raft/transport)
 
 
-(defclass transport () ())
+(defclass transport ()
+  ((serializer
+    :initarg serializer
+    :initform (raft/serialization:make-basic-serializer)
+    :accessor serializer)))
 
 (defgeneric connect (transport server-address other-transport))
 
