@@ -50,6 +50,9 @@
     :documentation "A value that will determine if this raft server
 has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
+   (persister
+    :initform nil
+    :accessor persister)
    (shutdown-channel
     :initform nil
     :accessor shutdown-channel)
@@ -187,6 +190,13 @@ timely manner")
   (when (quorum-achieved-p r)
     (become-leader r)
     (return :leader)))
+
+(defun make-raft-instance (server-id servers transport persister)
+  (make-instance 'raft
+                 :server-id server-id
+                 :servers servers
+                 :transport transport
+                 :persister persister))
 
 (defmethod run ((raft raft))
   (new-heartbeat-timer raft)
