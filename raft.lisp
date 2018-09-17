@@ -69,9 +69,9 @@ timely manner")
   (setf (current-state raft) state))
 
 (defmethod connect-to-peers ((raft raft))
-  (loop for server in servers
+  (loop for server in (servers raft)
      do
-       (raft/transport:connect (transport raft) peer)))
+       (raft/transport:connect (transport raft) server)))
 
 (defmethod state-check ((raft raft) state-query)
   (eq (state raft) state-query))

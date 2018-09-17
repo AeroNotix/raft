@@ -1,6 +1,7 @@
 (defpackage :raft/memory-transport
   (:use :cl :raft/transport)
-  (:export :memory-transport))
+  (:export #:memory-transport
+           #:peers))
 (in-package :raft/memory-transport)
 
 (defparameter *memory-transport-directory-lock* (bt:make-lock "memory-transport-directory-lock"))
@@ -29,7 +30,7 @@
 
 (defun find-memory-transport (server-address)
   (bt:with-lock-held (*memory-transport-directory-lock*)
-    (gethash server-id *memory-transport-directory*)))
+    (gethash server-address *memory-transport-directory*)))
 
 (defmethod connect ((mt memory-transport) server-address)
   (alexandria:when-let ((peer (find-memory-transport server-address)))
