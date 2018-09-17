@@ -26,6 +26,7 @@
                :raft/memory-transport
                :raft/trivial
                :raft/binary
+               :raft/persistence
                :raft/disk)
   :components ((:file "raft"))
   :serial t)

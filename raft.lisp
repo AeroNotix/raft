@@ -2,10 +2,6 @@
   (:use :common-lisp :chanl :raft/state)
   (:import-from #:raft/trivial
                 #:while)
-  (:import-from #:raft/disk
-                #:persistent-hash-table
-                #:log-entry
-                #:operation)
   (:import-from #:raft/state
                 #:current-term)
   (:import-from #:raft/transport

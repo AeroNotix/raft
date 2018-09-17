@@ -1,5 +1,6 @@
 (defpackage raft/binary
-  (:use :cl))
+  (:use :cl)
+  (:export #:read-sized-string-from-stream))
 
 (in-package raft/binary)
 
@@ -38,3 +39,9 @@
 (define-binary-write short  16)
 (define-binary-write int    32)
 (define-binary-write bigint 64)
+
+(defmethod read-sized-string-from-stream ((stream stream))
+  (let* ((string-size (read-byte stream))
+         (buffer (make-array string-size)))
+    (read-sequence buffer stream)
+    (flexi-streams:octets-to-string buffer)))
