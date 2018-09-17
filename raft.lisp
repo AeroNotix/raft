@@ -191,12 +191,15 @@ timely manner")
     (become-leader r)
     (return :leader)))
 
-(defun make-raft-instance (server-id servers transport persister)
-  (make-instance 'raft
-                 :server-id server-id
-                 :servers servers
-                 :transport transport
-                 :persister persister))
+(defun make-raft-instance (server-id servers transport persister &optional serializer)
+  (let ((transport (if serializer
+                       (make-instance transport :serializer (make-instance serializer))
+                       (make-instance transport))))
+    (make-instance 'raft
+                   :server-id server-id
+                   :servers servers
+                   :transport transport
+                   :persister persister)))
 
 (defmethod run ((raft raft))
   (new-heartbeat-timer raft)
