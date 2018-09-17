@@ -42,11 +42,15 @@
 (defmacro define-state-handler (state-machine-type state-machine-state
                                 (state-machine-symbol state-symbol event-specialiser)
                                 &body body)
-  (let ((symb (gensym)))
+  (let* ((symb (gensym))
+         (ignore-form (list state-machine-symbol state-symbol))
+         (ignore-form (cons 'ignorable (if (consp event-specialiser)
+                                            ignore-form
+                                            (cons symb ignore-form)))))
     `(defmethod state-machine-event ((,state-machine-symbol ,state-machine-type)
                                      (,state-symbol (eql ,state-machine-state))
                                      ,(if (consp event-specialiser)
                                           event-specialiser
                                           `(,symb (eql ,event-specialiser))))
-       (declare (ignorable ,symb ,state-machine-symbol ,state-symbol))
+       (declare ,ignore-form)
        (block nil ,@body))))
