@@ -56,7 +56,8 @@
     :accessor operation)))
 
 (defmethod print-object ((le simple-log-entry) stream)
-  (format stream "#<LOG-ENTRY INDEX: ~D TERM: ~D OP: ~A>" (raft/persistence:index le) (term le) (op le)))
+  (format stream "#<LOG-ENTRY INDEX: ~D TERM: ~D OP: ~A>"
+          (raft/persistence:index le) (term le) (op le)))
 
 (defgeneric serialize-log-entry (serializer log-entry stream)
   (:documentation "Takes a log entry and encodes it into a stream"))
