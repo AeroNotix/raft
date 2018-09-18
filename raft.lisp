@@ -104,7 +104,7 @@ timely manner")
   (setf (heartbeat raft) (raft/timers:after (1+ (random 10)))))
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
-  (loop for peer in (servers raft)
+  (loop for peer in (remove (server-id raft) (servers raft))
      do
        (funcall method (transport raft) peer rr)))
 
