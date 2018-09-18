@@ -164,14 +164,10 @@ timely manner")
   (when (> (raft/msgs:term ae) (current-term r))
     (values :follower *recur-p*)))
 
-(define-state-handler raft :follower (r state (rv raft/msgs:request-vote))
-  state)
+;;; RequestVote RPC handlers
 
-(define-state-handler raft :leader (r state (rv raft/msgs:request-vote))
-  state)
-
-(define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
-  (log:debug "Candidate ~A received request-vote ~A" r rv)
+(defmethod handle-request-vote ((r raft) (rv raft/msgs:request-vote))
+  (log:debug "~A ~A received request-vote ~A" (state r) r rv)
   ;; if we get multiple RequestVote RPCs for the same election, skip.
   (unless (<= (raft/msgs:term rv) (voted-in-election r))
     (let ((rvr (make-instance 'raft/msgs:request-vote-response
@@ -180,8 +176,20 @@ timely manner")
       (when (raft/msgs:vote-granted rvr)
         (new-heartbeat-timer raft)
         (setf (voted-in-election r) (raft/msgs:term :rv))
-        (return :follower))))
-  :candidate)
+        (raft/transport:request-vote-response (transport r) (raft/msgs:candidate-id rv) rvr)
+        (return-from handle-request-vote :follower))))
+  (log:warn "~A ignoring request-vote rpc due to: their term: ~A and our-vote: ~A"
+            (state r) (raft/msgs:term rv) (voted-in-election r))
+  (state r))
+
+(define-state-handler raft :follower (r state (rv raft/msgs:request-vote))
+  (handle-request-vote r rv))
+
+(define-state-handler raft :leader (r state (rv raft/msgs:request-vote))
+  (handle-request-vote r rv))
+
+(define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
+  (handle-request-vote r rv))
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
   (log:debug "Candidate ~A received vote response ~A" r rv)

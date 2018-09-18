@@ -5,6 +5,7 @@
    #:append-entries
    #:append-entries-response
    #:request-vote
+   #:candidate-id
    #:request-vote-response
    #:term
    #:vote-granted)

@@ -47,3 +47,7 @@
 
 (defmethod request-vote ((mt memory-transport) server-address (rv raft/msgs:request-vote))
   (trivial-rpc mt server-address rv))
+
+(defmethod request-vote-response ((mt memory-transport) server-address (rv raft/msgs:request-vote-response))
+  (trivial-rpc mt server-address rv))
+
