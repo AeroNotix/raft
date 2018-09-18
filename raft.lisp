@@ -200,7 +200,8 @@ timely manner")
     (incf (votes r)))
   (when (quorum-achieved-p r)
     (become-leader r)
-    (return :leader)))
+    (return :leader))
+  :candidate)
 
 (define-state-handler raft :candidate (r state :heartbeat-timeout)
   ;; should this timeout handle leader election timeouts?
