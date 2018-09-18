@@ -193,6 +193,11 @@ timely manner")
     (become-leader r)
     (return :leader)))
 
+(define-state-handler raft :candidate (r state :heartbeat-timeout)
+  ;; should this timeout handle leader election timeouts?
+  (log:debug "Candidate ~A received heartbeat timeout")
+  :candidate)
+
 (defun make-raft-instance (server-id servers transport persister &optional serializer)
   (let ((transport (if serializer
                        (make-instance transport :server-id server-id :serializer (make-instance serializer))
