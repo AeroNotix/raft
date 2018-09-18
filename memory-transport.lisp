@@ -51,3 +51,6 @@
 (defmethod request-vote-response ((mt memory-transport) server-address (rv raft/msgs:request-vote-response))
   (trivial-rpc mt server-address rv))
 
+(defmethod hangup ((mt memory-transport))
+  (bt:with-lock-held (*memory-transport-directory-lock*)
+    (remhash (server-id mt) *memory-transport-directory*)))

@@ -11,7 +11,8 @@
    #:append-entries-response
    #:request-vote
    #:request-vote-response
-   #:encode-peer))
+   #:encode-peer
+   #:hangup))
 (in-package :raft/transport)
 
 
@@ -35,6 +36,8 @@
 
 (defgeneric request-vote (transport server-address request-vote))
 
-(defgeneric request-vote-response (transport request-vote-request term successful-p))
+(defgeneric request-vote-response (transport server-address request-vote-request))
 
 (defgeneric encode-peer (transport server-address))
+
+(defgeneric hangup (transport))
