@@ -6,7 +6,9 @@
 ;; was one.
 (defpackage :raft/timers
   (:use :cl :chanl)
-  (:export :after))
+  (:export :after
+           :stop-timer
+           :reset-timer))
 
 (in-package :raft/timers)
 
