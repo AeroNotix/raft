@@ -1,3 +1,9 @@
+;; This package is filled with workarounds for, frankly, subpar
+;; concurrency libraries with Common Lisp.
+
+;; Timers are dealt with synchronously, channels cannot be cancelled,
+;; channel select causes spin waits the CPU. A tyre fire if there ever
+;; was one.
 (defpackage :raft/timers
   (:use :cl :chanl)
   (:export :after))
