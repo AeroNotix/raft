@@ -60,3 +60,6 @@
 (defmethod reset-timer ((timer timer))
   (stop-timer timer)
   (sb-ext:schedule-timer (timer timer) (n timer)))
+
+(defmethod recv ((timer timer) &key (blockp t))
+  (recv (timeout-channel timer)))

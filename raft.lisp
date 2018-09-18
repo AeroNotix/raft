@@ -42,13 +42,9 @@
    (voted-in-election
     :initform 0
     :accessor voted-in-election)
-   ;; TODO: heartbeat fields into their own class
-   (heartbeat-timer
+   (heartbeat
     :initform nil
-    :accessor heartbeat-timer)
-   (heartbeat-channel
-    :initform nil
-    :accessor heartbeat-channel
+    :accessor heartbeat
     :documentation "A value that will determine if this raft server
 has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
@@ -102,18 +98,10 @@ timely manner")
     (sleep force-wait)
     (bt:destroy-thread (raft-thread raft))))
 
-(defmethod reset-heartbeat-timer ((raft raft))
-  (when (and (heartbeat-timer raft)
-             (heartbeat-channel raft))
-    ;; todo: wrap the timer type, present it as an opaque object
-    (chanl:recv (heartbeat-channel raft) :blockp nil)
-    (trivial-timers:unschedule-timer (heartbeat-timer raft))))
-
 (defmethod new-heartbeat-timer ((raft raft))
-  (reset-heartbeat-timer raft)
-  (multiple-value-bind (hb-channel hb-timer) (raft/timers:after (1+ (random 3)))
-    (setf (heartbeat-timer raft) hb-timer)
-    (setf (heartbeat-channel raft) hb-channel)))
+  (when (heartbeat raft)
+    (raft/timers:stop-timer (heartbeat raft)))
+  (setf (heartbeat raft) (raft/timers:after (1+ (random 10)))))
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
   (loop for peer in (servers raft)
@@ -225,9 +213,9 @@ timely manner")
                            (select
                              ((recv (rpc-channel (transport raft)) event)
                               (apply-event raft event))
-                             ((recv (heartbeat-channel raft))
-                              (new-heartbeat-timer raft)
-                              (apply-event raft :heartbeat-timeout))
+                             ((recv (heartbeat raft))
+                              (apply-event raft :heartbeat-timeout)
+                              (new-heartbeat-timer raft))
                              (t
                               ;; yeah, oh yeah, you fucking like that?
                               ;; chanl is garbage. It spins the
