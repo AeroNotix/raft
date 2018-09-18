@@ -18,7 +18,7 @@
 
 
 (defmethod trivial-rpc ((mt memory-transport) server-address (rpc raft/msgs:raft-request))
-  (log:debug "~A sending ~A to ~A" mt server-address rpc)
+  (log:debug "~A sending ~A to ~A" mt rpc server-address)
   (let ((peer (gethash server-address (peers mt))))
     (if peer
         (chanl:send (rpc-channel peer) rpc :blockp nil)
