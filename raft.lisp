@@ -129,7 +129,7 @@ timely manner")
                            :leader-commit (commit-index raft))))
     (send-simple-rpc raft #'raft/transport:append-entries ae)))
 
-(defmethod start-leader-election ((raft raft))
+(defmethod begin-leader-election ((raft raft))
   (log:warn "Starting leader election: ~A" raft)
   (incf (current-term raft))
   (setf (votes raft) 1)
@@ -144,7 +144,7 @@ timely manner")
   (setf (leader raft) (local-address (transport raft))))
 
 (define-state-handler raft :follower (r state :heartbeat-timeout)
-  (start-leader-election r)
+  (begin-leader-election r)
   :candidate)
 
 (define-state-handler raft :leader (r state :heartbeat-timeout)
