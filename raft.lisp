@@ -40,7 +40,7 @@
     :initform 0
     :accessor votes)
    (voted-in-election
-    :initform nil
+    :initform 0
     :accessor voted-in-election)
    ;; TODO: heartbeat fields into their own class
    (heartbeat-timer
@@ -123,6 +123,7 @@ timely manner")
 (defmethod request-votes ((raft raft))
   (log:debug "~A requesting votes" raft)
   (let* ((rv (make-instance 'raft/msgs:request-vote
+                            :term (current-term raft)
                             :last-log-term (last-log-term raft)
                             :last-log-index (last-log-index raft)
                             :candidate-id (server-id raft))))
@@ -183,7 +184,7 @@ timely manner")
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
   ;; if we get multiple RequestVote RPCs for the same election, skip.
-  (unless (eq (raft/msgs:term rv) (voted-in-election r))
+  (unless (<= (raft/msgs:term rv) (voted-in-election r))
     (let ((rvr (make-instance 'raft/msgs:request-vote-response
                               :vote-granted (> (raft/msgs:term rv) (current-term r))
                               :term (current-term r))))
@@ -224,6 +225,7 @@ timely manner")
                              ((recv (rpc-channel (transport raft)) event)
                               (apply-event raft event))
                              ((recv (heartbeat-channel raft))
+                              (new-heartbeat-timer raft)
                               (apply-event raft :heartbeat-timeout))
                              (t
                               ;; yeah, oh yeah, you fucking like that?
