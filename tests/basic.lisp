@@ -29,16 +29,17 @@
                         (make-log-entry 0 1 :set '("Y" "2"))
                         (make-log-entry 0 2 :set '("Z" "3")))))
       (apply-log-entries pht log-entries)
-      (ok (equal (retrieve-log-entry pht "X") "1"))
-      (ok (equal (retrieve-log-entry pht "Y") "2"))
-      (ok (equal (retrieve-log-entry pht "Z") "3")))
+      (ok (equal (retrieve-log-entry pht "X") "1") "We set X=1, and can read it")
+      (ok (equal (retrieve-log-entry pht "Y") "2") "We set Y=2, and can read it")
+      (ok (equal (retrieve-log-entry pht "Z") "3") "We set Z=3, and can read it"))
     (let ((pht (make-instance 'persistent-hash-table :path "new.lht")))
-      (ok (equal (retrieve-log-entry pht "X") "1"))
-      (ok (equal (retrieve-log-entry pht "Y") "2"))
-      (ok (equal (retrieve-log-entry pht "Z") "3"))))
+      (ok (equal (retrieve-log-entry pht "X") "1") "After serialization/deserialization, reads still work")
+      (ok (equal (retrieve-log-entry pht "Y") "2") "After serialization/deserialization, reads still work")
+      (ok (equal (retrieve-log-entry pht "Z") "3") "After serialization/deserialization, reads still work")))
 
 (deftest attempt-deserialize-empty-file
-  (ok (make-instance 'persistent-hash-table :path "tests/empty-file")))
+  (ok (make-instance 'persistent-hash-table :path "tests/empty-file")
+      "Deserializing an empty file shouldn't cause errors (perhaps in future it will)"))
 
 (deftest serialize-deserialize-set/get-operations
   (let ((pht (make-instance 'persistent-hash-table :path "new.lht"))
@@ -46,7 +47,8 @@
                       (make-log-entry 0 0 :set '("X" "1"))
                       (make-log-entry 0 1 :del '("X")))))
     (apply-log-entries pht log-entries)
-    (ok (equal (retrieve-log-entry pht "X") nil))))
+    (ok (equal (retrieve-log-entry pht "X") nil)
+        "Setting a value, then deleting it, then reading back from the log, should not contain that value")))
 
 (defun run! ()
   (rove:run :raft/tests/basic))
