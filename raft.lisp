@@ -101,7 +101,7 @@ timely manner")
 (defmethod new-heartbeat-timer ((raft raft))
   (when (heartbeat raft)
     (raft/timers:stop-timer (heartbeat raft)))
-  (setf (heartbeat raft) (raft/timers:after (1+ (random 10)))))
+  (setf (heartbeat raft) (raft/timers:after (+ 3 (random 7)))))
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
   (loop for peer in (remove (server-id raft) (servers raft))
