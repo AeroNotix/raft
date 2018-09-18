@@ -171,6 +171,7 @@ timely manner")
   state)
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
+  (log:debug "Candidate ~A received request-vote ~A" r rv)
   ;; if we get multiple RequestVote RPCs for the same election, skip.
   (unless (<= (raft/msgs:term rv) (voted-in-election r))
     (let ((rvr (make-instance 'raft/msgs:request-vote-response
