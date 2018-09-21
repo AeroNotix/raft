@@ -42,9 +42,6 @@
 (defmethod append-entries ((mt memory-transport) server-address (ae raft/msgs:append-entries))
   (trivial-rpc mt server-address ae))
 
-(defmethod encode-peer ((mt memory-transport) server-address)
-  server-address)
-
 (defmethod request-vote ((mt memory-transport) server-address (rv raft/msgs:request-vote))
   (trivial-rpc mt server-address rv))
 
