@@ -107,9 +107,11 @@ timely manner")
   (setf (heartbeat raft) (raft/timers:after (+ 3 (random 7)))))
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
-  (loop for peer in (remove (server-id raft) (servers raft))
-     do
-       (funcall method (transport raft) peer rr)))
+  (let ((targets (remove (server-id raft) (servers raft))))
+    (log:debug "Sending ~A to ~A" rr targets)
+    (loop for peer in targets
+       do
+         (funcall method (transport raft) peer rr))))
 
 (defmethod request-votes ((raft raft))
   (log:debug "~A requesting votes" raft)
