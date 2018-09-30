@@ -76,8 +76,10 @@
       (loop for follower in intended-followers
          do
            (raft/fsm:apply-event intended-leader rvr))
-      (rove:ok (raft:leader-p intended-leader)
-               "After all followers have replied with a successful RequestVotes response, we are the leader"))
+      (ok (raft:leader-p intended-leader)
+          "After all followers have replied with a successful RequestVotes response, we are the leader")
+      (ok (every #'raft:follower-p intended-followers)
+          "After a leader is chosen, all other raft instances are still followers"))
     (mapcar hangup-transport rafts)))
 
 (defun run! ()
