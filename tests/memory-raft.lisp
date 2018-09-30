@@ -97,7 +97,8 @@
     (ok (raft:follower-p raft)
             "All raft instances start in the follower state")
     (raft/fsm:apply-event raft :heartbeat-timeout)
-    (ok (raft:candidate-p raft) "After a heartbeat timeout all followers become candidates")
+    (ok (raft:candidate-p raft)
+        "After a heartbeat timeout all followers become candidates")
     (raft/fsm:apply-event raft (make-instance 'raft/msgs:request-vote
                                               :last-log-term 1
                                               :last-log-index 1
