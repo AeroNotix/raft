@@ -126,7 +126,7 @@ timely manner")
                             :last-log-term (last-log-term raft)
                             :last-log-index (last-log-index raft)
                             :candidate-id (server-id raft))))
-    (send-simple-rpc raft #'raft/transport:request-vote rv)))
+    (send-simple-rpc raft #'request-vote rv)))
 
 (defmethod send-heartbeats ((raft raft))
   (let ((ae (make-instance 'raft/msgs:append-entries
