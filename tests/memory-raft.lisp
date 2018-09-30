@@ -82,5 +82,19 @@
           "After a leader is chosen, all other raft instances are still followers"))
     (mapcar hangup-transport rafts)))
 
+(deftest candidate-reverts-to-follower-upon-newer-term
+  (let ((raft (first (make-n-rafts 1))))
+    (ok (raft:follower-p raft)
+            "All raft instances start in the follower state")
+    (raft/fsm:apply-event raft :heartbeat-timeout)
+    (ok (raft:candidate-p raft) "After a heartbeat timeout all followers become candidates")
+    (raft/fsm:apply-event raft (make-instance 'raft/msgs:request-vote
+                                              :last-log-term 1
+                                              :last-log-index 1
+                                              :candidate-id 1
+                                              :term 10))
+    (ok (raft:follower-p raft)
+        "Candidates revert to follower when receiving a request vote with a higher term")))
+
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
