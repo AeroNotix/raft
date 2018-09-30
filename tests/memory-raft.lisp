@@ -43,7 +43,7 @@
         "Every raft instance in the peer group knows about all the other peers")
     (mapcar hangup-transport rafts)))
 
-(deftest simple-manual-leader-election
+(deftest simple-leader-election
   (let* ((class-is (lambda (c)
                      (lambda (inst)
                        (log:debug "The actual class is: ~A" (class-of inst))
