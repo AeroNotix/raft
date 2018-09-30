@@ -1,8 +1,13 @@
 (defpackage raft
   (:use :common-lisp :chanl :raft/state)
-  (:export #:make-raft-instance
-           #:transport
-           #:run-state-machine)
+  (:export
+   #:candidate-p
+   #:follower-p
+   #:leader-p
+   #:make-raft-instance
+   #:run-state-machine
+   #:transport
+   #:state-check)
   (:import-from #:raft/trivial
                 #:while)
   (:import-from #:raft/state
