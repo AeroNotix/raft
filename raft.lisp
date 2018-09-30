@@ -86,6 +86,9 @@ timely manner")
   (floor (length (servers raft)) 2))
 
 (defmethod quorum-achieved-p ((raft raft))
+  (log:debug "Quorum check: needed: ~A, current-votes: ~A"
+             (votes-required raft)
+             (votes raft))
   (and (candidate-p raft)
        (>= (votes raft)
            (votes-required raft))))
