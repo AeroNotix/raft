@@ -6,6 +6,9 @@
   (:export #:run!))
 (in-package :raft/tests/memory-raft)
 
+(defhook :before
+  (setf raft/memory-transport::*memory-transport-directory* (make-hash-table :test 'equal)))
+
 (defun make-n-uuids (n)
   (loop for i below n
      collect (uuid:make-v4-uuid)))
