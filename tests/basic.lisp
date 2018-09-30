@@ -23,6 +23,7 @@
                   (make-instance 'simple-operation :name ,name :operands ,operands)))
 
 (deftest serialize-and-deserialize-well-formed-single-log
+  (warn "This should be in a test module specific to disk formats")
     (let ((pht (make-instance 'persistent-hash-table :path "new.lht"))
           (log-entries (list
                         (make-log-entry 0 0 :set '("X" "1"))
