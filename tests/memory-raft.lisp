@@ -43,6 +43,13 @@
         "Every raft instance in the peer group knows about all the other peers")
     (mapcar hangup-transport rafts)))
 
+(deftest followers-become-candidates-after-heartbeat-timeout
+  (let ((raft (first (make-n-rafts 1))))
+    (ok (raft:follower-p raft)
+        "All raft instances start in the follower state")
+    (raft/fsm:apply-event raft :heartbeat-timeout)
+    (ok (raft:candidate-p raft) "After a heartbeat timeout all followers become candidates")))
+
 (deftest simple-leader-election
   (let* ((class-is (lambda (c)
                      (lambda (inst)
