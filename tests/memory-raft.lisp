@@ -44,11 +44,16 @@
     (mapcar hangup-transport rafts)))
 
 (deftest simple-manual-leader-election
-  (log:config :debug)
-  (let* ((recv-rpc-channel (compose
+  (let* ((class-is (lambda (c)
+                     (lambda (inst)
+                       (log:debug "The actual class is: ~A" (class-of inst))
+                       (eq (class-of inst) (find-class c)))))
+         (get-rpc-channel (compose
+                           #'raft/transport:rpc-channel
+                           #'raft:transport))
+         (recv-rpc-channel (compose
                             #'chanl:recv
-                            #'raft/transport:rpc-channel
-                            #'raft:transport))
+                            get-rpc-channel))
          (hangup-transport (compose
                             #'raft/transport:hangup
                             #'raft:transport))
@@ -59,15 +64,20 @@
     (rove:ok (eq (length rafts) cluster-size) "Cluster size is as expected")
     (rove:ok (eq (hash-table-count raft/memory-transport::*memory-transport-directory*) cluster-size)
              "Memory transports register themselves with the memory transport directory")
-    (raft:run-state-machine intended-leader)
-    (let ((request-votes (mapcar recv-rpc-channel intended-followers)))
-      (ok (eq (length request-votes) (length intended-followers))
-          "The leader should send each intended follower a RequestVote RPC")
+    (raft/fsm:apply-event intended-leader :heartbeat-timeout)
+    (rove:ok (raft:candidate-p intended-leader)
+             "After a heartbeat timeout, the raft instance should convert to candidate")
+    (let ((request-votes (mapcar recv-rpc-channel intended-followers))
+          (rvr (make-instance 'raft/msgs:request-vote-response :vote-granted t :term 1)))
+      (rove:ok (eq (length request-votes) (length intended-followers))
+               "The leader should send each intended follower a RequestVote RPC")
+      (rove:ok (every (funcall class-is 'raft/msgs:request-vote) request-votes)
+               "The only RPC in each intended follower should be a RequestVote from the intended leader")
       (loop for follower in intended-followers
          do
-           (ok (eq (class-of (funcall recv-rpc-channel intended-leader))
-                   'raft/msgs:request-vote-response)
-               "Every follower should, in this state, return a successful RequestVote RPC")))
+           (raft/fsm:apply-event intended-leader rvr))
+      (rove:ok (raft:leader-p intended-leader)
+               "After all followers have replied with a successful RequestVotes response, we are the leader"))
     (mapcar hangup-transport rafts)))
 
 (defun run! ()
