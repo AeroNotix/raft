@@ -21,7 +21,9 @@
   (log:debug "~A sending ~A to ~A" mt rpc server-address)
   (let ((peer (gethash server-address (peers mt))))
     (if peer
-        (chanl:send (rpc-channel peer) rpc :blockp nil)
+        (progn
+          (chanl:send (rpc-channel peer) rpc :blockp nil)
+          (log:info "Sent ~A to ~A" rpc peer))
         (log:warn "~A attempted to ~A on a peer we have not connected to" mt rpc))))
 
 (defmethod initialize-instance :after ((mt memory-transport) &key)
