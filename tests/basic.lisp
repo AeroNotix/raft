@@ -24,19 +24,19 @@
 
 (deftest serialize-and-deserialize-well-formed-single-log
   (warn "This should be in a test module specific to disk formats")
-    (let ((pht (make-instance 'persistent-hash-table :path "new.lht"))
-          (log-entries (list
-                        (make-log-entry 0 0 :set '("X" "1"))
-                        (make-log-entry 0 1 :set '("Y" "2"))
-                        (make-log-entry 0 2 :set '("Z" "3")))))
-      (apply-log-entries pht log-entries)
-      (ok (equal (retrieve-log-entry pht "X") "1") "We set X=1, and can read it")
-      (ok (equal (retrieve-log-entry pht "Y") "2") "We set Y=2, and can read it")
-      (ok (equal (retrieve-log-entry pht "Z") "3") "We set Z=3, and can read it"))
-    (let ((pht (make-instance 'persistent-hash-table :path "new.lht")))
-      (ok (equal (retrieve-log-entry pht "X") "1") "After serialization/deserialization, reads still work")
-      (ok (equal (retrieve-log-entry pht "Y") "2") "After serialization/deserialization, reads still work")
-      (ok (equal (retrieve-log-entry pht "Z") "3") "After serialization/deserialization, reads still work")))
+  (let ((pht (make-instance 'persistent-hash-table :path "new.lht"))
+        (log-entries (list
+                      (make-log-entry 0 0 :set '("X" "1"))
+                      (make-log-entry 0 1 :set '("Y" "2"))
+                      (make-log-entry 0 2 :set '("Z" "3")))))
+    (apply-log-entries pht log-entries)
+    (ok (equal (retrieve-log-entry pht "X") "1") "We set X=1, and can read it")
+    (ok (equal (retrieve-log-entry pht "Y") "2") "We set Y=2, and can read it")
+    (ok (equal (retrieve-log-entry pht "Z") "3") "We set Z=3, and can read it"))
+  (let ((pht (make-instance 'persistent-hash-table :path "new.lht")))
+    (ok (equal (retrieve-log-entry pht "X") "1") "After serialization/deserialization, reads still work")
+    (ok (equal (retrieve-log-entry pht "Y") "2") "After serialization/deserialization, reads still work")
+    (ok (equal (retrieve-log-entry pht "Z") "3") "After serialization/deserialization, reads still work")))
 
 (deftest attempt-deserialize-empty-file
   (ok (make-instance 'persistent-hash-table :path "tests/empty-file")
