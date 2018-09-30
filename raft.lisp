@@ -191,6 +191,10 @@ timely manner")
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote))
   (handle-request-vote r rv))
 
+(define-state-handler raft :leader (r state (rv raft/msgs:request-vote-response))
+  (log:warn "~A received ~A while already a leader" r rv)
+  :leader)
+
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
   (log:debug "Candidate ~A received vote response ~A" r rv)
   (when (> (raft/msgs:term rv) (current-term r))
