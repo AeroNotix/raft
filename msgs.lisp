@@ -81,9 +81,15 @@ prev-log-index and prev-log-term")))
 (defclass request-vote-response (raft-request)
   ((term
     :initarg :term
+    :initform 0
     :accessor term
     :documentation "current-term, for candidate to update itself")
    (vote-granted
     :initarg :vote-granted
+    :initform nil
     :accessor vote-granted
-    :documentation "true means candidate received vote")))
+    :documentation "T means candidate received vote, NIL otherwise")))
+
+(defmethod print-object ((rvr request-vote-response) stream)
+  (format stream "#<RequestVoteResponse>{term: ~D; vote-granted: ~A}"
+          (term rvr) (vote-granted rvr)))
