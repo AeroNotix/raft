@@ -9,7 +9,8 @@
    #:transport
    #:state-check)
   (:import-from #:raft/trivial
-                #:while)
+                #:while
+                #:compose)
   (:import-from #:raft/state
                 #:current-term)
   (:import-from #:raft/transport
