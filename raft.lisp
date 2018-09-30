@@ -141,7 +141,7 @@ timely manner")
 
 (defmethod become-leader ((raft raft))
   (log:debug "Raft instance ~A becoming leader" raft)
-  (setf (leader raft) (local-address (transport raft))))
+  (setf (leader raft) (server-id raft)))
 
 (define-state-handler raft :follower (r state :heartbeat-timeout)
   (begin-leader-election r)
