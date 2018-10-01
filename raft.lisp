@@ -7,7 +7,8 @@
    #:make-raft-instance
    #:run-state-machine
    #:transport
-   #:state-check)
+   #:state-check
+   #:votes)
   (:import-from #:raft/trivial
                 #:while
                 #:compose)
@@ -213,6 +214,9 @@ timely manner")
 
 (define-state-handler raft :leader (r state (rv raft/msgs:request-vote-response))
   (log:warn "~A received ~A while already a leader" r rv)
+  (when (and (eq (raft/msgs:term rv) (current-term r))
+             (raft/msgs:vote-granted rv))
+    (incf (votes r)))
   :leader)
 
 (define-state-handler raft :candidate (r state (rv raft/msgs:request-vote-response))
