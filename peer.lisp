@@ -1,7 +1,9 @@
 (defpackage :raft/peer
   (:use :cl)
   (:export
-   #:peer))
+   #:peer
+   #:server-id
+   #:server-address))
 (in-package :raft/peer)
 
 

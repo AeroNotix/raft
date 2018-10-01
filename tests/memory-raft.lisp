@@ -18,9 +18,10 @@
     (loop for uuid in uuids
                     collect
          (make-raft-instance uuid
-                             uuids
                              'raft/memory-transport:memory-transport
-                             'raft/persistent-hash-table:persistent-hash-table))))
+                             ;; this needs to be initialized properly (path name etc)
+                             'raft/persistent-hash-table:persistent-hash-table
+                             'raft/memory-transport:memory-discoverer))))
 
 (defun create-in-memory-cluster (cluster-size)
   (let* ((rafts (make-n-rafts cluster-size)))
@@ -63,7 +64,9 @@
     (raft/fsm:apply-event raft (make-instance 'raft/msgs:request-vote
                                               :last-log-term 1
                                               :last-log-index 1
-                                              :candidate-id 1
+                                              :candidate-id (make-instance 'raft/peer:peer
+                                                                           :server-address :something
+                                                                           :server-id :something)
                                               :term 10))
     (ok (raft:follower-p raft)
         "Candidates revert to follower when receiving a request vote with a higher term.")))
@@ -101,8 +104,8 @@
          (leader (first rafts))
          (followers (rest rafts)))
     (ok (eq (length rafts) cluster-size) "Cluster size is as expected.")
-    (ok (eq (hash-table-count raft/memory-transport::*memory-transport-directory*) cluster-size)
-             "Memory transports register themselves with the memory transport directory.")
+    (ok (eq (length (raft/discovery:find-peers (raft:discoverer leader))) cluster-size)
+        "Memory transports register themselves with the memory transport directory.")
     (raft/fsm:apply-event leader :heartbeat-timeout)
     (ok (raft:candidate-p leader)
         "After a heartbeat timeout, the raft instance should convert to candidate.")
@@ -146,10 +149,11 @@
     (ok (and (eq (raft:votes leader0) 1)
              (eq (raft:votes leader1) 1))
         "Starting an election leads to each candidate receiving a single vote, from themselves.")
-    (let ((request-votes (append (mapcar recv-rpc-channel followers)
-                                 (mapcar recv-rpc-channel followers))))
-      (ok (eq (length request-votes) (* 2 (length followers)))
-          "Each leader should send each intended follower a RequestVote RPC."))))
+    (mapcar #'raft:process-rpc-events followers)
+    (raft:process-rpc-events leader0)
+    (raft:process-rpc-events leader1)
+    (ok (or (raft:leader-p leader0)
+            (raft:leader-p leader1)))))
 
 (defun run! ()
   (rove:run :raft/tests/memory-raft))

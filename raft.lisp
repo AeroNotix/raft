@@ -8,7 +8,9 @@
    #:run-state-machine
    #:transport
    #:state-check
-   #:votes)
+   #:votes
+   #:process-rpc-events
+   #:discoverer)
   (:import-from #:raft/trivial
                 #:while
                 #:compose)
@@ -37,10 +39,10 @@
     :initarg :server-id
     :initform nil
     :accessor server-id)
-   (servers
-    :initarg :servers
+   (server-address
+    :initarg :server-address
     :initform nil
-    :accessor servers)
+    :accessor server-address)
    (leader
     :accessor leader)
    (votes
@@ -55,6 +57,10 @@
     :documentation "A value that will determine if this raft server
 has experienced a timeout from not receiving AppendEntries RPCs in a
 timely manner")
+   (discoverer
+    :initarg :discoverer
+    :initform nil
+    :accessor discoverer)
    (persister
     :initarg :persister
     :initform nil
@@ -73,7 +79,7 @@ timely manner")
   (setf (current-state raft) state))
 
 (defmethod connect-to-peers ((raft raft))
-  (loop for server in (servers raft)
+  (loop for server in (raft/discovery:find-peers (discoverer raft))
      do
        (raft/transport:connect (transport raft) server)))
 
@@ -90,7 +96,7 @@ timely manner")
   (state-check raft :leader))
 
 (defmethod votes-required ((raft raft))
-  (floor (length (servers raft)) 2))
+  (floor (length (raft/discovery:find-peers (discoverer raft))) 2))
 
 (defmethod quorum-achieved-p ((raft raft))
   (log:debug "Quorum check: needed: ~A, current-votes: ~A"
@@ -114,7 +120,7 @@ timely manner")
   (setf (heartbeat raft) (raft/timers:after (+ 3 (random 7)))))
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
-  (let ((targets (remove (server-id raft) (servers raft))))
+  (let ((targets (raft/discovery:find-peers (discoverer raft))))
     (log:debug "Sending ~A to ~A" rr targets)
     (loop for peer in targets
        do
@@ -126,7 +132,10 @@ timely manner")
                             :term (current-term raft)
                             :last-log-term (last-log-term raft)
                             :last-log-index (last-log-index raft)
-                            :candidate-id (server-id raft))))
+                            :candidate-id (raft/transport:encode-peer
+                                           (transport raft)
+                                           (server-id raft)
+                                           (server-address raft)))))
     (send-simple-rpc raft #'request-vote rv)))
 
 (defmethod send-heartbeats ((raft raft))
@@ -167,9 +176,9 @@ timely manner")
   (let ((aer (make-instance 'raft/msgs:append-entries-response
                             :term (current-term r)
                             :success nil)))
-    (setf (raft/msgs:success aer) (< (raft/msgs:term ae) (current-term r)))
-    (setf (raft/msgs:success aer) (and (= (raft/state:prev-log-term r) (raft/msgs:prev-log-term ae))
-                                       (= (raft/state:prev-log-index r) (raft/msgs:prev-log-index ae))))
+    ;; (setf (raft/msgs:success aer) (< (raft/msgs:term ae) (current-term r)))
+    ;; (setf (raft/msgs:success aer) (and (= (raft/state:prev-log-term r) (raft/msgs:prev-log-term ae))
+    ;;                                    (= (raft/state:prev-log-index r) (raft/msgs:prev-log-index ae))))
     (when (raft/msgs:success aer)
       (let ((highest-index (append-new-entries r ae)))
         (when (> (leader-commit ae) (commit-index r))
@@ -189,19 +198,16 @@ timely manner")
 
 (defmethod handle-request-vote ((r raft) (rv raft/msgs:request-vote))
   (log:debug "~A ~A received request-vote ~A" (state r) r rv)
-  ;; if we get multiple RequestVote RPCs for the same election, skip.
-  (unless (<= (raft/msgs:term rv) (voted-in-election r))
-    (let ((rvr (make-instance 'raft/msgs:request-vote-response
-                              :vote-granted (> (raft/msgs:term rv) (current-term r))
-                              :term (current-term r))))
+  (let ((rvr (make-instance 'raft/msgs:request-vote-response
+                            :vote-granted (> (raft/msgs:term rv) (current-term r))
+                            :term (current-term r))))
+    (unless (<= (raft/msgs:term rv) (voted-in-election r))
       (when (raft/msgs:vote-granted rvr)
         (new-heartbeat-timer r)
         (setf (voted-in-election r) (raft/msgs:term rv))
-        (raft/transport:request-vote-response (transport r) (raft/msgs:candidate-id rv) rvr)
-        (return-from handle-request-vote :follower))))
-  (log:warn "~A ignoring request-vote rpc due to: their term: ~A and our-vote: ~A"
-            (state r) (raft/msgs:term rv) (voted-in-election r))
-  (state r))
+        (setf (state r) :follower)))
+    (raft/transport:request-vote-response (transport r) (raft/msgs:candidate-id rv) rvr)
+    (state r)))
 
 (define-state-handler raft :follower (r state (rv raft/msgs:request-vote))
   (handle-request-vote r rv))
@@ -237,14 +243,20 @@ timely manner")
   (log:debug "Candidate ~A received heartbeat timeout" r)
   :candidate)
 
-(defun make-raft-instance (server-id servers transport persister &optional serializer)
+(defmethod process-rpc-events ((raft raft))
+  (multiple-value-bind (event channel) (recv (rpc-channel (transport raft)) :blockp nil)
+    (unless (null channel)
+      (apply-event raft event)
+      (process-rpc-events raft))))
+
+(defun make-raft-instance (server-id transport persister discoverer &optional serializer)
   (let ((transport (if serializer
                        (make-instance transport :server-id server-id :serializer (make-instance serializer))
                        (make-instance transport :server-id server-id))))
     (make-instance 'raft
                    :server-id server-id
-                   :servers servers
                    :transport transport
+                   :discoverer (make-instance discoverer)
                    :persister persister)))
 
 (defmethod run-state-machine ((raft raft))

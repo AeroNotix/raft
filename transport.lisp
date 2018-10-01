@@ -11,7 +11,9 @@
    #:append-entries-response
    #:request-vote
    #:request-vote-response
-   #:hangup))
+   #:hangup
+   #:encode-peer
+   #:decode-peer))
 (in-package :raft/transport)
 
 
@@ -49,3 +51,9 @@
 
 (defgeneric hangup (transport)
   (:documentation "Close this transport"))
+
+(defgeneric encode-peer (transport server-id server-address)
+  (:documentation "Encodes the peer into something the transport can use"))
+
+(defgeneric decode-peer (transport peer)
+  (:documentation "Decodes the peer into some transport specific meaning"))
