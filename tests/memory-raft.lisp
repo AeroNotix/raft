@@ -114,9 +114,9 @@
     (let ((request-votes (mapcar recv-rpc-channel followers))
           (rvr (make-instance 'raft/msgs:request-vote-response :vote-granted t :term 1)))
       (ok (eq (length request-votes) (length followers))
-               "The leader should send each intended follower a RequestVote RPC.")
+          "The leader should send each intended follower a RequestVote RPC.")
       (ok (every (funcall class-is 'raft/msgs:request-vote) request-votes)
-               "The only RPC in each intended follower should be a RequestVote from the intended leader.")
+          "The only RPC in each intended follower should be a RequestVote from the intended leader.")
       (loop for follower in followers
          do
            (raft/fsm:apply-event leader rvr))
