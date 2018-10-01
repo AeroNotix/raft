@@ -99,9 +99,6 @@ timely manner")
   (floor (length (raft/discovery:find-peers (discoverer raft))) 2))
 
 (defmethod quorum-achieved-p ((raft raft))
-  (log:debug "Quorum check: needed: ~A, current-votes: ~A"
-             (votes-required raft)
-             (votes raft))
   (and (candidate-p raft)
        (>= (votes raft)
            (votes-required raft))))
@@ -121,7 +118,6 @@ timely manner")
 
 (defmethod send-simple-rpc ((raft raft) method (rr raft/msgs:raft-request))
   (let ((targets (raft/discovery:find-peers (discoverer raft))))
-    (log:debug "Sending ~A to ~A" rr targets)
     (loop for peer in targets
        do
          (funcall method (transport raft) peer rr))))
@@ -239,8 +235,6 @@ timely manner")
   :candidate)
 
 (define-state-handler raft :candidate (r state :heartbeat-timeout)
-  ;; should this timeout handle leader election timeouts?
-  (log:debug "Candidate ~A received heartbeat timeout" r)
   :candidate)
 
 (defmethod process-rpc-events ((raft raft))
