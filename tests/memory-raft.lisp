@@ -129,7 +129,7 @@
     (mapcar hangup-transport rafts)))
 
 (deftest competing-leader-elections
-  (let* ((cluster-size 5)
+  (let* ((cluster-size 7)
          (rafts (create-in-memory-cluster cluster-size))
          (leader0 (first rafts))
          (leader1 (second rafts))
@@ -153,7 +153,11 @@
     (raft:process-rpc-events leader0)
     (raft:process-rpc-events leader1)
     (ok (or (raft:leader-p leader0)
-            (raft:leader-p leader1)))))
+            (raft:leader-p leader1))
+        "One of the candidatesshould become a leader.")
+    (ok (not (and (raft:leader-p leader0)
+                  (raft:leader-p leader1)))
+        "But not both!")))
 
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
