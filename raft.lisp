@@ -163,7 +163,16 @@ timely manner")
   :leader)
 
 (define-state-handler raft :follower (r state (ae raft/msgs:append-entries))
-  state)
+  (let ((aer (make-instance 'raft/msgs:append-entries-response
+                            :term (current-term r)
+                            :success nil)))
+    (setf (raft/msgs:success aer) (< (raft/msgs:term ae) (current-term r)))
+    (setf (raft/msgs:success aer) (and (= (raft/state:prev-log-term r) (raft/msgs:prev-log-term ae))
+                                       (= (raft/state:prev-log-index r) (raft/msgs:prev-log-index ae))))
+    (when (raft/msgs:success aer)
+      (let ((highest-index (append-new-entries r ae)))
+        (when (> (leader-commit ae) (commit-index r))
+          (setf (commit-index r) (min highest-index (leader-commit ae))))))))
 
 (define-state-handler raft :leader (r state (ae raft/msgs:append-entries))
   "If AppendEntries RPC received from new leader: convert to follower"

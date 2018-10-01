@@ -3,7 +3,10 @@
   (:export
    #:raft-request
    #:append-entries
+   #:prev-log-term
+   #:prev-log-index
    #:append-entries-response
+   #:success
    #:request-vote
    #:candidate-id
    #:request-vote-response

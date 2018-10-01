@@ -53,6 +53,35 @@
     (raft/fsm:apply-event raft :heartbeat-timeout)
     (ok (raft:candidate-p raft) "After a heartbeat timeout all followers become candidates")))
 
+(deftest candidate-reverts-to-follower-upon-newer-term
+  (let ((raft (first (make-n-rafts 1))))
+    (ok (raft:follower-p raft)
+            "All raft instances start in the follower state")
+    (raft/fsm:apply-event raft :heartbeat-timeout)
+    (ok (raft:candidate-p raft)
+        "After a heartbeat timeout all followers become candidates")
+    (raft/fsm:apply-event raft (make-instance 'raft/msgs:request-vote
+                                              :last-log-term 1
+                                              :last-log-index 1
+                                              :candidate-id 1
+                                              :term 10))
+    (ok (raft:follower-p raft)
+        "Candidates revert to follower when receiving a request vote with a higher term")))
+
+(deftest followers-reject-append-entries-with-old-terms
+  (let ((raft (first (make-n-rafts 1))))
+    (ok (raft:follower-p raft)
+        "All raft instances start in the follower state")
+    ;; -1 chosen because it's the first lowest impossible value that
+    ;; should trigger rejection of AppendEntries RPC requests.
+    (raft/fsm:apply-event raft (make-instance 'raft/msgs:append-entries
+                                              :leader-commit -1
+                                              :entries nil
+                                              :prev-log-term -1
+                                              :prev-log-index -1
+                                              :leader-id :test-append-entries
+                                              :term -1))))
+
 (deftest simple-leader-election
   (let* ((class-is (lambda (c)
                      (lambda (inst)
@@ -91,21 +120,6 @@
       (ok (every #'raft:follower-p intended-followers)
           "After a leader is chosen, all other raft instances are still followers"))
     (mapcar hangup-transport rafts)))
-
-(deftest candidate-reverts-to-follower-upon-newer-term
-  (let ((raft (first (make-n-rafts 1))))
-    (ok (raft:follower-p raft)
-            "All raft instances start in the follower state")
-    (raft/fsm:apply-event raft :heartbeat-timeout)
-    (ok (raft:candidate-p raft)
-        "After a heartbeat timeout all followers become candidates")
-    (raft/fsm:apply-event raft (make-instance 'raft/msgs:request-vote
-                                              :last-log-term 1
-                                              :last-log-index 1
-                                              :candidate-id 1
-                                              :term 10))
-    (ok (raft:follower-p raft)
-        "Candidates revert to follower when receiving a request vote with a higher term")))
 
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
