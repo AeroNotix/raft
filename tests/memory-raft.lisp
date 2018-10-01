@@ -154,7 +154,7 @@
     (raft:process-rpc-events leader1)
     (ok (or (raft:leader-p leader0)
             (raft:leader-p leader1))
-        "One of the candidatesshould become a leader.")
+        "One of the candidates should become a leader.")
     (ok (not (and (raft:leader-p leader0)
                   (raft:leader-p leader1)))
         "But not both!")))
