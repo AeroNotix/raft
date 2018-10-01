@@ -194,14 +194,18 @@ timely manner")
 
 (defmethod handle-request-vote ((r raft) (rv raft/msgs:request-vote))
   (log:debug "~A ~A received request-vote ~A" (state r) r rv)
-  (let ((rvr (make-instance 'raft/msgs:request-vote-response
-                            :vote-granted (> (raft/msgs:term rv) (current-term r))
-                            :term (current-term r))))
-    (unless (<= (raft/msgs:term rv) (voted-in-election r))
-      (when (raft/msgs:vote-granted rvr)
-        (new-heartbeat-timer r)
-        (setf (voted-in-election r) (raft/msgs:term rv))
-        (setf (state r) :follower)))
+  (let* ((vote-granted-p (and (> (raft/msgs:term rv) (current-term r))
+                              (not (<= (raft/msgs:term rv)
+                                       (voted-in-election r)))))
+         (rvr (make-instance 'raft/msgs:request-vote-response
+                             :vote-granted vote-granted-p
+                             :term (if vote-granted-p
+                                       (raft/msgs:term rv)
+                                       (current-term r)))))
+    (when vote-granted-p
+      (new-heartbeat-timer r)
+      (setf (voted-in-election r) (raft/msgs:term rv))
+      (setf (state r) :follower))
     (raft/transport:request-vote-response (transport r) (raft/msgs:candidate-id rv) rvr)
     (state r)))
 
