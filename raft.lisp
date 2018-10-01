@@ -150,7 +150,10 @@ timely manner")
   (log:warn "Starting leader election: ~A" raft)
   (incf (current-term raft))
   (setf (votes raft) 1)
-  (setf (voted-for raft) (server-id raft))
+  (setf (voted-for raft) (raft/transport:encode-peer
+                          (transport raft)
+                          (server-id raft)
+                          (server-address raft)))
   (request-votes raft))
 
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
