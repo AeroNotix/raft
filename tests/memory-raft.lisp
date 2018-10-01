@@ -126,13 +126,23 @@
          (rafts (create-in-memory-cluster cluster-size))
          (leader0 (first rafts))
          (leader1 (second rafts))
-         (followers (cddr rafts)))
+         (followers (cddr rafts))
+         (get-rpc-channel (compose
+                           #'raft/transport:rpc-channel
+                           #'raft:transport))
+         (recv-rpc-channel (compose
+                            #'chanl:recv
+                            get-rpc-channel)))
 
     (raft/fsm:apply-event leader0 :heartbeat-timeout)
     (raft/fsm:apply-event leader1 :heartbeat-timeout)
     (ok (and (raft:candidate-p leader0)
              (raft:candidate-p leader1))
-        "Two potential candidates running at the same time is very much allowed.")))
+        "Two potential candidates running at the same time is very much allowed.")
+    (let ((request-votes (append (mapcar recv-rpc-channel followers)
+                                 (mapcar recv-rpc-channel followers))))
+      (ok (eq (length request-votes) (* 2 (length followers)))
+          "Each leader should send each intended follower a RequestVote RPC."))))
 
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
