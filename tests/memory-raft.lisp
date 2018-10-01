@@ -121,5 +121,18 @@
           "After a leader is chosen, all other raft instances are still followers"))
     (mapcar hangup-transport rafts)))
 
+(deftest competing-leader-elections
+  (let* ((cluster-size 5)
+         (rafts (create-in-memory-cluster cluster-size))
+         (leader0 (first rafts))
+         (leader1 (second rafts))
+         (followers (cddr rafts)))
+
+    (raft/fsm:apply-event leader0 :heartbeat-timeout)
+    (raft/fsm:apply-event leader1 :heartbeat-timeout)
+    (ok (and (raft:candidate-p leader0)
+             (raft:candidate-p leader1))
+        "Two potential candidates running at the same time is very much allowed.")))
+
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
