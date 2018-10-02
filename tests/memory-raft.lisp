@@ -159,5 +159,20 @@
                   (raft:leader-p leader1)))
         "But not both!")))
 
+(deftest followers-only-vote-once
+  (let* ((cluster-size 7)
+         (rafts (create-in-memory-cluster cluster-size))
+         (follower0 (first rafts))
+         (leaders (rest rafts)))
+    (mapcar (lambda (leader)
+              (raft/fsm:apply-event leader :heartbeat-timeout))
+            leaders)
+    (raft:process-rpc-events follower0)
+    (mapcar #'raft:process-rpc-events leaders)
+    (ok (eq (length (remove-if-not (lambda (leader) (eq (raft:votes leader) 2)) leaders)) 1)
+        "Only one leader will have two votes.")
+    (ok (eq (length (remove-if-not (lambda (leader) (eq (raft:votes leader) 1)) leaders)) (- cluster-size 2))
+        "Only one leader will have two votes.")))
+
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
