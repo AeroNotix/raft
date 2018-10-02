@@ -62,18 +62,15 @@ send to that server (initialized to leader last log index + 1)")
 to be replicated on server (initialized to 0, increases
 monotonically)")
    ;; Implementation-specific slots
+   (last-log-index
+    :initform 0
+    :accessor last-log-index)
+   (last-log-term
+    :initform 0
+    :accessor last-log-term)
    (current-state
     :initform :follower
     :accessor current-state
     :documentation "Each server should start in the follower state,
 transitioning between raft states as described in the paper. Possible
 modes: :follower, :candidate, :leader")))
-
-
-(defmethod last-log-index ((rs raft-state))
-  (warn "last-log-index not doing the right thing")
-  0)
-
-(defmethod last-log-term ((rs raft-state))
-  (warn "last-log-term not doing the right thing")
-  0)
