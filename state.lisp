@@ -9,6 +9,8 @@
            #:match-index
            #:current-state
            #:heartbeat-timout
+           #:next-index
+           #:match-index
            #:last-log-index
            #:last-log-term))
 

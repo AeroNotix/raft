@@ -159,9 +159,14 @@ timely manner")
 (defmethod cease-leader-election ((raft raft) (rv raft/msgs:request-vote-response))
   (setf (current-term raft) (raft/msgs:term rv)))
 
+(defmethod reinitialize-per-follower-indexes ((raft raft))
+  (setf (next-index raft) (make-hash-table))
+  (setf (match-index raft) (make-hash-table)))
+
 (defmethod become-leader ((raft raft))
   (log:debug "Raft instance ~A becoming leader" raft)
-  (setf (leader raft) (server-id raft)))
+  (setf (leader raft) (server-id raft))
+  (reinitialize-per-follower-indexes raft))
 
 (define-state-handler raft :follower (r state :heartbeat-timeout)
   (begin-leader-election r)
