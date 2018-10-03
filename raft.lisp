@@ -10,7 +10,8 @@
    #:state-check
    #:votes
    #:process-rpc-events
-   #:discoverer)
+   #:discoverer
+   #:send-heartbeats)
   (:import-from #:raft/trivial
                 #:while
                 #:compose)

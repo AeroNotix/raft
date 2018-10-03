@@ -175,5 +175,29 @@
     (ok (eq (length (remove-if-not (lambda (leader) (eq (raft:votes leader) 1)) leaders)) (- cluster-size 2))
         "Only one leader will have two votes.")))
 
+(deftest simple-append-entries
+  (let* ((get-rpc-channel (compose
+                           #'raft/transport:rpc-channel
+                           #'raft:transport))
+         (recv-rpc-channel (compose
+                            #'chanl:recv
+                            get-rpc-channel))
+         (hangup-transport (compose
+                            #'raft/transport:hangup
+                            #'raft:transport))
+         (cluster-size 5)
+         (rafts (create-in-memory-cluster cluster-size))
+         (leader (first rafts))
+         (followers (rest rafts)))
+    (raft/fsm:apply-event leader :heartbeat-timeout)
+    (mapcar #'raft:process-rpc-events followers)
+    (raft:process-rpc-events leader)
+    (ok (raft:leader-p leader))
+    (ok (notevery #'raft:leader-p followers))
+    (ok (notevery #'raft:candidate-p followers))
+    (ok (every #'raft:follower-p followers))
+    (raft:send-heartbeats leader)
+    (mapcar #'raft:process-rpc-events followers)))
+
 (defun run! ()
   (rove:run :raft/tests/memory-raft))
