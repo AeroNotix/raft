@@ -147,7 +147,7 @@ timely manner")
     (send-simple-rpc raft #'raft/transport:append-entries ae)))
 
 (defmethod begin-leader-election ((raft raft))
-  (log:warn "Starting leader election: ~A" raft)
+  (log:info "Starting leader election: ~A" raft)
   (incf (current-term raft))
   (setf (votes raft) 1)
   (setf (voted-for raft) (raft/transport:encode-peer
@@ -227,7 +227,7 @@ timely manner")
   (handle-request-vote r rv))
 
 (define-state-handler raft :leader (r state (rv raft/msgs:request-vote-response))
-  (log:warn "~A received ~A while already a leader" r rv)
+  (log:info "~A received ~A while already a leader" r rv)
   (when (and (eq (raft/msgs:term rv) (current-term r))
              (raft/msgs:vote-granted rv))
     (incf (votes r)))

@@ -7,6 +7,7 @@
 (in-package :raft/tests/memory-raft)
 
 (defhook :before
+  (log:config :warn)
   (setf raft/memory-transport::*memory-transport-directory* (make-hash-table :test 'equal)))
 
 (defun make-n-uuids (n)
